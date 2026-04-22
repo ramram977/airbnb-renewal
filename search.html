@@ -366,10 +366,10 @@
     .nav-item.active .nav-icon, .nav-item.active .nav-label { color: var(--red); }
     .nav-item.map-hl .nav-icon-pill {
       background: var(--red); border-radius: 50px;
-      padding: 15px 30px; display: flex; align-items: center; justify-content: center;
-      margin-top: -26px; box-shadow: 0 4px 16px rgba(255,56,92,.42);
+      padding: 10px 18px; display: flex; align-items: center; gap: 5px;
+      margin-top: -22px; box-shadow: 0 4px 16px rgba(255,56,92,.42);
     }
-    .nav-item.map-hl .nav-icon-pill .nav-icon { color: #fff; font-size: 22px; }
+    .nav-item.map-hl .nav-icon-pill .nav-icon { color: #fff; font-size: 17px; }
     .nav-item.map-hl .nav-icon-pill .pill-lbl { color: #fff; font-size: 12px; font-weight: 700; }
     .nav-item.map-hl > .nav-label { color: var(--red); font-weight: 700; margin-top: 2px; }
 
@@ -530,11 +530,10 @@
     </div>
     <div class="nav-item map-hl" onclick="location.href='map.html'">
       <div class="nav-icon-pill">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 4L3 7V20L9 17L15 20L21 17V4L15 7L9 4Z" fill="white"/>
-          <path d="M9 4V17M15 7V20" stroke="rgba(255,255,255,0.45)" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
+        <span class="nav-icon">🗺️</span>
+        <span class="pill-lbl">지도</span>
       </div>
+      <span class="nav-label">지도</span>
     </div>
     <div class="nav-item" onclick="location.href='messages.html'" style="cursor:pointer">
       <span class="nav-icon">💬</span>
