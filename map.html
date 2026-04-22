@@ -295,16 +295,17 @@
     .nav-item.map-active .nav-icon-pill {
       background: var(--red);
       border-radius: 50px;
-      padding: 10px 18px;
+      padding: 8px 32px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 5px;
-      margin-top: -22px;
+      gap: 1px;
+      margin-top: -27px;
       box-shadow: 0 4px 16px rgba(255,56,92,.42);
     }
     .nav-item.map-active .nav-icon-pill .nav-icon { color: var(--white); font-size: 17px; }
-    .nav-item.map-active .nav-icon-pill .pill-label { color: var(--white); font-size: 12px; font-weight: 700; }
-    .nav-item.map-active > .nav-label { color: var(--red); font-weight: 700; margin-top: 2px; }
+    .nav-item.map-active .nav-icon-pill .pill-label { color: var(--white); font-size: 11px; font-weight: 700; }
+    .nav-item.map-active > .nav-label { display: none; }
 
     /* Filter modal backdrop */
     .filter-modal {
