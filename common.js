@@ -116,12 +116,12 @@ if ('serviceWorker' in navigator) {
       .detail-header,
       .book-header,
       .profile-header {
-        padding-top: calc(env(safe-area-inset-top, 20px) + 8px) !important;
+        padding-top: env(safe-area-inset-top, 16px) !important;
       }
 
       /* 지도 검색바 위치 */
       .map-search {
-        top: calc(env(safe-area-inset-top, 20px) + 8px) !important;
+        top: env(safe-area-inset-top, 16px) !important;
       }
 
       /* 하단 내비게이션: 제스처 바 여백 */
