@@ -769,6 +769,15 @@ document.getElementById('amenitiesSection').innerHTML = `
       </div>`).join('')}
   </div>
 `;
+// 편의시설 아이콘 탭 인터랙션 (동적 렌더 후 등록)
+document.querySelectorAll('#amenitiesSection .amenity-icon').forEach(icon => {
+  icon.addEventListener('click', () => {
+    icon.classList.remove('_pop');
+    void icon.offsetWidth;
+    icon.classList.add('_pop');
+  });
+  icon.addEventListener('animationend', () => icon.classList.remove('_pop'));
+});
 
 // 숙소 소개
 document.getElementById('descSection').innerHTML = `

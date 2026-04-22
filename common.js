@@ -73,7 +73,47 @@ const WishlistManager = {
   count() { return this.get().length; },
 };
 
-// ── 5. 탭 간 실시간 동기화 ────────────────────────────────────────────
+// ── 5. MICRO-INTERACTION ─────────────────────────────────────────────
+const MicroInteraction = {
+  init() {
+    this._pills();
+    this._searchBar();
+    this._cards();
+  },
+
+  _pills() {
+    document.querySelectorAll('.pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        pill.classList.remove('_spring');
+        void pill.offsetWidth; // reflow → restart animation
+        pill.classList.add('_spring');
+      });
+      pill.addEventListener('animationend', () => pill.classList.remove('_spring'));
+    });
+  },
+
+  _searchBar() {
+    document.querySelectorAll('.search-bar, .srch-bar').forEach(bar => {
+      bar.addEventListener('pointerdown', () => bar.classList.add('_glow'));
+      bar.addEventListener('pointerup',    () => bar.classList.remove('_glow'));
+      bar.addEventListener('pointerleave', () => bar.classList.remove('_glow'));
+    });
+  },
+
+  _cards() {
+    // 이벤트 위임 — 동적 렌더 카드도 처리
+    document.addEventListener('pointerdown', e => {
+      const card = e.target.closest('.card');
+      if (card) card.classList.add('_pressed');
+    }, { passive: true });
+    const clearPressed = () =>
+      document.querySelectorAll('.card._pressed').forEach(c => c.classList.remove('_pressed'));
+    document.addEventListener('pointerup',    clearPressed, { passive: true });
+    document.addEventListener('pointercancel', clearPressed, { passive: true });
+  },
+};
+
+// ── 6. 탭 간 실시간 동기화 ────────────────────────────────────────────
 window.addEventListener('storage', e => {
   if (e.key === 'ab_theme') {
     document.documentElement.setAttribute('data-theme', e.newValue || 'light');
@@ -84,9 +124,10 @@ window.addEventListener('storage', e => {
   }
 });
 
-// ── 6. DOMContentLoaded: 글씨크기 적용 ──────────────────────────────
+// ── 6. DOMContentLoaded: 글씨크기 적용 + 마이크로 인터랙션 ────────────
 document.addEventListener('DOMContentLoaded', () => {
   FontSizeManager.apply();
+  MicroInteraction.init();
 });
 
 // ── 7. PWA 서비스워커 등록 ────────────────────────────────────────────
@@ -156,6 +197,49 @@ if ('serviceWorker' in navigator) {
     }
     html.pwa body {
       padding-bottom: calc(72px + env(safe-area-inset-bottom, 20px)) !important;
+    }
+
+    /* ── 마이크로 인터랙션 ── */
+
+    /* 카테고리 필 — 스프링 스케일 */
+    @keyframes _pill-spring {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.07); }
+      72%  { transform: scale(0.97); }
+      100% { transform: scale(1); }
+    }
+    .pill._spring {
+      animation: _pill-spring 0.30s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    /* 편의시설 아이콘 — 눌림 + 튀기 */
+    @keyframes _amenity-pop {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(0.88); }
+      68%  { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    .amenity-icon._pop {
+      animation: _amenity-pop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      cursor: pointer;
+    }
+
+    /* 숙소 카드 — 터치 시 살짝 들어가는 느낌 */
+    .card {
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .card._pressed {
+      transform: scale(0.97) !important;
+      box-shadow: 0 1px 8px rgba(0,0,0,.07) !important;
+    }
+
+    /* 검색바 — 포커스 글로우 */
+    .search-bar, .srch-bar {
+      transition: box-shadow 0.15s ease;
+    }
+    .search-bar._glow, .srch-bar._glow {
+      box-shadow: 0 0 0 3px rgba(232,160,32,.22), 0 2px 16px rgba(0,0,0,.10) !important;
     }
   `;
   document.head.appendChild(style);
