@@ -105,49 +105,71 @@ if ('serviceWorker' in navigator) {
     html { background: #F5F4F1; }
     html[data-theme="dark"] { background: #141414; }
 
-    /* ── PWA standalone 전용 오버라이드 ── */
+    /* ── PWA: CSS 미디어쿼리 방식 ── */
     @media (display-mode: standalone) {
-
-      /* 상단 헤더: safe-area + 작은 여백만 */
-      .header,
-      .srch-header,
-      .msg-header,
-      .chat-header,
-      .detail-header,
-      .book-header,
-      .profile-header {
-        padding-top: calc(env(safe-area-inset-top, 16px) + 4px) !important;
+      .header, .srch-header, .msg-header, .chat-header,
+      .detail-header, .book-header, .profile-header {
+        padding-top: calc(env(safe-area-inset-top, 44px) + 4px) !important;
       }
-
-      /* 지도 검색바 위치 */
       .map-search {
-        top: calc(env(safe-area-inset-top, 16px) + 4px) !important;
+        top: calc(env(safe-area-inset-top, 44px) + 4px) !important;
       }
-
-      /* 하단 내비게이션: 제스처 바 여백 */
       .bottom-nav {
         height: auto !important;
         min-height: 56px !important;
         padding-top: 8px !important;
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 10px) !important;
         align-items: flex-start !important;
       }
-
-      /* 예약/상세 하단 고정 바 */
       .bottom-bar {
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 14px) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 14px) !important;
       }
-
-      /* 채팅 입력창 */
       .input-bar {
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 10px) !important;
       }
-
-      /* 본문 하단 여백 (하단 내비 높이 + 제스처 바) */
       body {
-        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 20px)) !important;
       }
+    }
+
+    /* ── PWA: JS 감지 fallback (html.pwa 클래스) ── */
+    html.pwa .header, html.pwa .srch-header, html.pwa .msg-header,
+    html.pwa .chat-header, html.pwa .detail-header,
+    html.pwa .book-header, html.pwa .profile-header {
+      padding-top: calc(env(safe-area-inset-top, 44px) + 4px) !important;
+    }
+    html.pwa .map-search {
+      top: calc(env(safe-area-inset-top, 44px) + 4px) !important;
+    }
+    html.pwa .bottom-nav {
+      height: auto !important;
+      min-height: 56px !important;
+      padding-top: 8px !important;
+      padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 10px) !important;
+      align-items: flex-start !important;
+    }
+    html.pwa .bottom-bar {
+      padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 14px) !important;
+    }
+    html.pwa .input-bar {
+      padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 10px) !important;
+    }
+    html.pwa body {
+      padding-bottom: calc(72px + env(safe-area-inset-bottom, 20px)) !important;
     }
   `;
   document.head.appendChild(style);
+
+  // JS로 standalone 모드 감지 → html.pwa 클래스 추가 (Samsung Chrome 대응)
+  function applyPwaClass() {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true ||
+      document.referrer.startsWith('android-app://');
+    if (isStandalone) document.documentElement.classList.add('pwa');
+  }
+  applyPwaClass();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyPwaClass);
+  }
 })();
