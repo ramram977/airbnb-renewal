@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Airbnb — 새로운 시작</title>
+  <script src="common.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --red: #FF385C;
+      --dark: #222222;
+      --mid: #717171;
+      --light: #EBEBEB;
+      --white: #FFFFFF;
+      --radius: 18px;
+    }
+
+    body {
+      font-family: -apple-system, 'Pretendard', 'SF Pro Display', sans-serif;
+      background: #F7F7F7;
+      max-width: 390px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247,247,247,0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 52px 20px 14px;
+    }
+
+    /* ── CATEGORY PILLS (float left) ── */
+    .category-pills {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px 6px 9px;
+      border-radius: 100px;
+      background: var(--white);
+      border: 1.5px solid var(--light);
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--dark);
+      cursor: pointer;
+      transition: all .18s ease;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .pill.active {
+      border-color: var(--dark);
+      background: var(--dark);
+      color: var(--white);
+    }
+    .pill .pill-icon {
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    /* ── SEARCH BAR ── */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--white);
+      border-radius: 50px;
+      padding: 11px 12px 11px 18px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.12);
+      cursor: pointer;
+    }
+    .search-icon {
+      font-size: 17px;
+      color: var(--red);
+      flex-shrink: 0;
+    }
+    .search-text {
+      flex: 1;
+    }
+    .search-text .main-text {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    .search-text .sub-text {
+      font-size: 11.5px;
+      color: var(--mid);
+      margin-top: 1px;
+    }
+    .search-filter-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid var(--light);
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      padding: 22px 20px 12px;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--dark);
+      letter-spacing: -0.3px;
+    }
+    .section-title span {
+      color: var(--red);
+    }
+
+    /* ── CARDS ── */
+    .cards-scroll {
+      display: flex;
+      gap: 14px;
+      padding: 0 20px 20px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .cards-scroll::-webkit-scrollbar { display: none; }
+
+    .card {
+      flex: 0 0 260px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      scroll-snap-align: start;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,.10);
+      aspect-ratio: 3/4;
+    }
+
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .35s ease;
+    }
+    .card:hover .card-img { transform: scale(1.03); }
+
+    /* like button */
+    .like-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      cursor: pointer;
+      transition: transform .15s ease;
+      z-index: 10;
+    }
+    .like-btn:hover { transform: scale(1.15); }
+    .like-btn.liked { color: var(--red); }
+
+    /* info overlay */
+    .card-info {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      background: rgba(255,255,255,0.22);
+      backdrop-filter: blur(18px) saturate(1.6);
+      -webkit-backdrop-filter: blur(18px) saturate(1.6);
+      border-radius: 13px;
+      border: 1px solid rgba(255,255,255,0.38);
+      padding: 10px 13px;
+    }
+    .card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--white);
+      text-shadow: 0 1px 4px rgba(0,0,0,.25);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+    .card-date {
+      font-size: 11.5px;
+      color: rgba(255,255,255,.88);
+      text-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .card-price {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--white);
+      text-shadow: 0 1px 4px rgba(0,0,0,.25);
+    }
+    .card-price span {
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    /* ── NEARBY SECTION (vertical list) ── */
+    .section-sub {
+      padding: 0 20px 8px;
+      font-size: 12px;
+      color: var(--mid);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .list-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 0 20px 100px;
+    }
+
+    .list-card {
+      display: flex;
+      gap: 13px;
+      background: var(--white);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 8px rgba(0,0,0,.07);
+      cursor: pointer;
+    }
+    .list-card-img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .list-card-info {
+      flex: 1;
+      padding: 12px 12px 12px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .list-card-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--dark);
+      line-height: 1.3;
+    }
+    .list-card-date {
+      font-size: 11.5px;
+      color: var(--mid);
+      margin-top: 3px;
+    }
+    .list-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .list-card-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+    .list-card-price span {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--mid);
+    }
+    .list-like {
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 390px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0,0,0,.08);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-around;
+      padding: 10px 0 28px;
+      z-index: 200;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex: 1;
+      transition: all .15s ease;
+    }
+    .nav-icon {
+      font-size: 22px;
+      color: var(--mid);
+      line-height: 1;
+    }
+    .nav-label {
+      font-size: 10.5px;
+      color: var(--mid);
+      font-weight: 500;
+    }
+    .nav-item.active .nav-icon,
+    .nav-item.active .nav-label {
+      color: var(--red);
+    }
+
+    /* MAP EMPHASIS */
+    .nav-item.map-highlight {
+      position: relative;
+    }
+    .nav-item.map-highlight .nav-icon-wrap {
+      background: var(--red);
+      border-radius: 50px;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: -22px;
+      box-shadow: 0 4px 16px rgba(255,56,92,.4);
+    }
+    .nav-item.map-highlight .nav-icon-wrap .nav-icon {
+      color: var(--white);
+      font-size: 18px;
+    }
+    .nav-item.map-highlight .nav-icon-wrap .nav-label-inline {
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .nav-item.map-highlight .nav-label {
+      margin-top: 2px;
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    /* RATING STARS */
+    .card-rating {
+      font-size: 11px;
+      color: rgba(255,255,255,.9);
+      margin-top: 2px;
+    }
+
+    /* ════════════════════════════════════
+       DARK MODE
+    ════════════════════════════════════ */
+    html[data-theme="dark"] {
+      --dark:  #E5E5E7;
+      --mid:   #8E8E93;
+      --light: #38383A;
+    }
+    [data-theme="dark"] body {
+      background: #141414;
+    }
+    [data-theme="dark"] .header {
+      background: rgba(20,20,20,0.93);
+    }
+    [data-theme="dark"] .pill {
+      background: #1C1C1E;
+      border-color: #38383A;
+      box-shadow: none;
+    }
+    [data-theme="dark"] .pill.active {
+      background: #E5E5E7;
+      border-color: #E5E5E7;
+      color: #141414;
+    }
+    [data-theme="dark"] .search-bar {
+      background: #1C1C1E;
+      box-shadow: 0 2px 16px rgba(0,0,0,.5);
+    }
+    [data-theme="dark"] .search-filter-btn {
+      background: #252528;
+      border-color: #38383A;
+    }
+    [data-theme="dark"] .list-card {
+      background: #1C1C1E;
+      box-shadow: 0 1px 8px rgba(0,0,0,.4);
+    }
+    [data-theme="dark"] .bottom-nav {
+      background: rgba(20,20,20,0.97);
+      border-top-color: #38383A;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <!-- Category pills -->
+  <div class="category-pills">
+    <div class="pill active">
+      <span class="pill-icon">🏠</span> 숙소
+    </div>
+    <div class="pill">
+      <span class="pill-icon">🎭</span> 체험
+    </div>
+    <div class="pill">
+      <span class="pill-icon">✨</span> 서비스
+    </div>
+  </div>
+
+  <!-- Search bar -->
+  <div class="search-bar" onclick="location.href='search.html'" style="cursor:pointer;">
+    <span class="search-icon">🔍</span>
+    <div class="search-text">
+      <div class="main-text">어디로 떠나고 싶으세요?</div>
+      <div class="sub-text">전국 · 날짜 추가 · 게스트 추가</div>
+    </div>
+    <div class="search-filter-btn">⚙️</div>
+  </div>
+</div>
+
+<!-- ── MAIN SCROLL ── -->
+<main>
+
+  <!-- Recommended section -->
+  <div class="section-title">이번 주 <span>추천 숙소</span></div>
+
+  <div class="cards-scroll">
+
+    <div class="card" onclick="location.href='detail.html?id=1'">
+      <img class="card-img" src="rooms/room6.jpg" alt="감성 한옥 스테이" />
+      <div class="like-btn liked">❤️</div>
+      <div class="card-info">
+        <div class="card-name">감성 한옥 스테이</div>
+        <div class="card-rating">⭐ 4.93 · 후기 118개</div>
+        <div class="card-meta">
+          <div class="card-date">서울 종로구 북촌</div>
+          <div class="card-price">₩165,000 <span>/ 박</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="location.href='detail.html?id=5'">
+      <img class="card-img" src="rooms/room2.jpg" alt="미니멀 모던 스튜디오" />
+      <div class="like-btn">🤍</div>
+      <div class="card-info">
+        <div class="card-name">미니멀 모던 스튜디오</div>
+        <div class="card-rating">⭐ 4.85 · 후기 167개</div>
+        <div class="card-meta">
+          <div class="card-date">서울 성동구 성수</div>
+          <div class="card-price">₩142,000 <span>/ 박</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="location.href='detail.html?id=4'">
+      <img class="card-img" src="rooms/room3.jpg" alt="제주 힐링 스테이" />
+      <div class="like-btn">🤍</div>
+      <div class="card-info">
+        <div class="card-name">제주 힐링 스테이</div>
+        <div class="card-rating">⭐ 4.90 · 후기 76개</div>
+        <div class="card-meta">
+          <div class="card-date">제주 서귀포시</div>
+          <div class="card-price">₩185,000 <span>/ 박</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="location.href='detail.html?id=3'">
+      <img class="card-img" src="rooms/room4.jpg" alt="숲속 통나무 카빈" />
+      <div class="like-btn liked">❤️</div>
+      <div class="card-info">
+        <div class="card-name">숲속 통나무 카빈</div>
+        <div class="card-rating">⭐ 4.97 · 후기 89개</div>
+        <div class="card-meta">
+          <div class="card-date">경기 가평군</div>
+          <div class="card-price">₩198,000 <span>/ 박</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Nearby section -->
+  <div class="section-title" style="padding-top:6px;">근처 <span>인기 숙소</span></div>
+  <div class="section-sub">지금 바로 예약 가능</div>
+
+  <div class="list-cards">
+
+    <div class="list-card" onclick="location.href='detail.html?id=6'">
+      <img class="list-card-img" src="rooms/room5.jpg" alt="여의도 한강 리버뷰" />
+      <div class="list-card-info">
+        <div>
+          <div class="list-card-name">여의도 한강 리버뷰</div>
+          <div class="list-card-date">서울 영등포구 여의도</div>
+        </div>
+        <div class="list-card-bottom">
+          <div class="list-card-price">₩215,000 <span>/ 박</span></div>
+          <div class="list-like">🤍</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-card" onclick="location.href='detail.html?id=1'">
+      <img class="list-card-img" src="rooms/room6.jpg" alt="감성 한옥 스테이" />
+      <div class="list-card-info">
+        <div>
+          <div class="list-card-name">감성 한옥 스테이 — 서울 북촌</div>
+          <div class="list-card-date">서울 종로구 북촌</div>
+        </div>
+        <div class="list-card-bottom">
+          <div class="list-card-price">₩165,000 <span>/ 박</span></div>
+          <div class="list-like">❤️</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-card" onclick="location.href='detail.html?id=2'">
+      <img class="list-card-img" src="rooms/room7.jpg" alt="오션뷰 모던 아파트" />
+      <div class="list-card-info">
+        <div>
+          <div class="list-card-name">오션뷰 모던 아파트 — 부산</div>
+          <div class="list-card-date">부산 해운대구</div>
+        </div>
+        <div class="list-card-bottom">
+          <div class="list-card-price">₩245,000 <span>/ 박</span></div>
+          <div class="list-like">🤍</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+
+  <div class="nav-item">
+    <div class="nav-icon">🔍</div>
+    <div class="nav-label">검색</div>
+  </div>
+
+  <div class="nav-item active">
+    <div class="nav-icon">✈️</div>
+    <div class="nav-label">여행</div>
+  </div>
+
+  <div class="nav-item map-highlight" onclick="location.href='map.html'" style="cursor:pointer">
+    <div class="nav-icon-wrap">
+      <span class="nav-icon">🗺️</span>
+      <span class="nav-label-inline">지도</span>
+    </div>
+    <div class="nav-label">지도</div>
+  </div>
+
+  <div class="nav-item" onclick="location.href='messages.html'" style="cursor:pointer">
+    <div class="nav-icon">💬</div>
+    <div class="nav-label">메시지</div>
+  </div>
+
+  <div class="nav-item" onclick="location.href='profile.html'" style="cursor:pointer">
+    <div class="nav-icon">👤</div>
+    <div class="nav-label">프로필</div>
+  </div>
+
+</nav>
+
+<script>
+  // pill switching
+  document.querySelectorAll('.pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+  });
+
+  // like toggle
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const liked = btn.classList.toggle('liked');
+      btn.textContent = liked ? '❤️' : '🤍';
+    });
+  });
+
+  document.querySelectorAll('.list-like').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const liked = btn.textContent === '🤍';
+      btn.textContent = liked ? '❤️' : '🤍';
+    });
+  });
+
+  // nav active state
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

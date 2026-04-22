@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>예약하기 — Airbnb</title>
+  <script src="common.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary:    #E8A020;
+      --primary-bg: #FEF9EE;
+      --bg:         #F5F4F1;
+      --surface:    #FFFFFF;
+      --border:     #EFEFED;
+      --dark:       #1A1A1A;
+      --mid:        #888;
+      --light:      #C8C8C0;
+      --red:        #FF385C;
+    }
+
+    body {
+      font-family: -apple-system, 'Pretendard', 'SF Pro Display', sans-serif;
+      background: var(--bg);
+      max-width: 390px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      padding-bottom: 110px;
+    }
+
+    /* ── HEADER ── */
+    .book-header {
+      position: sticky;
+      top: 0; z-index: 100;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 50px 18px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .back-btn:active { background: #ECEAE6; }
+    .header-title {
+      font-size: 17px; font-weight: 700; color: var(--dark);
+    }
+
+    /* ── LISTING CARD ── */
+    .listing-card {
+      margin: 16px 16px 0;
+      background: var(--surface);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--border);
+    }
+    .listing-thumb {
+      width: 76px; height: 76px;
+      border-radius: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .listing-info { flex: 1; min-width: 0; }
+    .listing-type { font-size: 11.5px; color: var(--mid); margin-bottom: 3px; }
+    .listing-name {
+      font-size: 14px; font-weight: 700; color: var(--dark);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .listing-rating {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; color: var(--mid); margin-top: 5px;
+    }
+    .listing-rating .star { color: #E8A020; font-size: 11px; }
+    .listing-price { font-size: 14px; font-weight: 700; color: var(--dark); }
+    .listing-price span { font-size: 11px; font-weight: 400; color: var(--mid); }
+
+    /* ── SECTION ── */
+    .section {
+      margin: 12px 16px 0;
+      background: var(--surface);
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .section-title {
+      font-size: 15px; font-weight: 700; color: var(--dark);
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── DATE PICKER ── */
+    .date-row {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .date-box {
+      flex: 1;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .date-box:first-child { border-right: 1px solid var(--border); }
+    .date-box:active { background: var(--bg); }
+    .date-box.active { background: var(--primary-bg); }
+    .date-label { font-size: 10.5px; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .date-value { font-size: 15px; font-weight: 600; color: var(--dark); }
+    .date-value.placeholder { color: var(--light); }
+
+    /* ── MINI CALENDAR ── */
+    .calendar-wrap {
+      padding: 0 16px 16px;
+      display: none;
+    }
+    .calendar-wrap.open { display: block; }
+
+    .cal-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0 12px;
+    }
+    .cal-nav-btn {
+      width: 32px; height: 32px;
+      border: none; border-radius: 50%;
+      background: var(--bg);
+      font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .cal-nav-btn:active { background: #ECEAE6; }
+    .cal-month { font-size: 15px; font-weight: 700; color: var(--dark); }
+
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+    }
+    .cal-dow {
+      text-align: center; font-size: 11px; font-weight: 600;
+      color: var(--mid); padding-bottom: 6px;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13.5px; font-weight: 500; color: var(--dark);
+      border-radius: 50%; cursor: pointer;
+      position: relative;
+      transition: background 0.1s;
+    }
+    .cal-day:hover:not(.disabled):not(.empty) { background: var(--bg); }
+    .cal-day.disabled { color: var(--light); pointer-events: none; }
+    .cal-day.empty { pointer-events: none; }
+    .cal-day.selected-start,
+    .cal-day.selected-end {
+      background: var(--primary) !important;
+      color: #fff !important;
+      font-weight: 700;
+    }
+    .cal-day.in-range {
+      background: #FEF3D6;
+      color: var(--dark);
+      border-radius: 0;
+    }
+    .cal-day.selected-start { border-radius: 50% 0 0 50%; }
+    .cal-day.selected-end   { border-radius: 0 50% 50% 0; }
+    .cal-day.selected-start.selected-end { border-radius: 50%; }
+    .cal-day.range-start-only { border-radius: 50%; }
+
+    /* ── NIGHTS BADGE ── */
+    .nights-badge {
+      margin: 10px 16px;
+      background: var(--primary-bg);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px; font-weight: 600; color: #B07010;
+      display: none;
+      align-items: center; gap: 6px;
+    }
+    .nights-badge.show { display: flex; }
+
+    /* ── GUEST COUNTER ── */
+    .guest-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+    }
+    .guest-row + .guest-row { border-top: 1px solid var(--border); }
+    .guest-info {}
+    .guest-type { font-size: 14px; font-weight: 600; color: var(--dark); }
+    .guest-sub  { font-size: 12px; color: var(--mid); margin-top: 2px; }
+    .counter {
+      display: flex; align-items: center; gap: 14px;
+    }
+    .counter-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: none;
+      font-size: 18px; color: var(--dark);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.1s;
+    }
+    .counter-btn:active { background: var(--bg); }
+    .counter-btn.disabled { border-color: var(--border); color: var(--light); pointer-events: none; }
+    .counter-val { font-size: 16px; font-weight: 600; color: var(--dark); min-width: 20px; text-align: center; }
+
+    /* ── PRICE BREAKDOWN ── */
+    .price-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px;
+    }
+    .price-row + .price-row { border-top: 1px solid var(--border); }
+    .price-row-label { font-size: 14px; color: var(--dark); }
+    .price-row-label.sub { color: var(--mid); font-size: 13px; }
+    .price-row-val { font-size: 14px; font-weight: 600; color: var(--dark); }
+    .price-row-val.highlight { color: var(--primary); }
+    .price-total .price-row-label { font-weight: 700; font-size: 15px; }
+    .price-total .price-row-val  { font-weight: 700; font-size: 16px; }
+
+    .discount-tag {
+      display: inline-block;
+      background: #FFF0D0;
+      color: #B07010;
+      font-size: 11px; font-weight: 700;
+      padding: 2px 7px; border-radius: 6px;
+      margin-left: 6px;
+    }
+
+    /* ── NOTICE ── */
+    .notice-box {
+      margin: 12px 16px 0;
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      font-size: 12.5px; color: var(--mid); line-height: 1.6;
+    }
+    .notice-box b { color: var(--dark); }
+
+    /* ── BOTTOM BAR ── */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 390px;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+      z-index: 200;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .bottom-total { flex: 1; }
+    .bottom-total-label { font-size: 11.5px; color: var(--mid); }
+    .bottom-total-price { font-size: 19px; font-weight: 800; color: var(--dark); }
+    .bottom-total-nights { font-size: 12px; color: var(--mid); }
+
+    .confirm-btn {
+      padding: 14px 28px;
+      border-radius: 25px;
+      border: none;
+      background: var(--primary);
+      color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(232,160,32,0.35);
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .confirm-btn:active { opacity: 0.85; transform: scale(0.97); }
+    .confirm-btn:disabled {
+      background: #DDD; color: #AAA;
+      box-shadow: none; cursor: not-allowed;
+    }
+
+    /* ── STEP 2: CONFIRM ── */
+    #step2 { display: none; }
+
+    .confirm-section {
+      margin: 12px 16px 0;
+      background: var(--surface);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .confirm-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .confirm-row:last-child { border-bottom: none; }
+    .confirm-key { font-size: 13px; color: var(--mid); }
+    .confirm-val { font-size: 13px; font-weight: 600; color: var(--dark); text-align: right; max-width: 200px; }
+
+    .confirm-policy {
+      margin: 12px 16px 0;
+      background: #FFF8E6;
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid #F5DFA0;
+    }
+    .policy-title { font-size: 13px; font-weight: 700; color: #B07010; margin-bottom: 6px; }
+    .policy-text  { font-size: 12px; color: #957020; line-height: 1.6; }
+
+    /* success modal */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+      width: 100%; max-width: 390px;
+      background: var(--surface);
+      border-radius: 28px 28px 0 0;
+      padding: 28px 24px calc(32px + env(safe-area-inset-bottom));
+      text-align: center;
+      animation: slideUp 0.3s cubic-bezier(0.32,0.72,0,1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .success-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: #F0FBF0;
+      margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+    }
+    .success-title { font-size: 22px; font-weight: 800; color: var(--dark); margin-bottom: 8px; }
+    .success-sub   { font-size: 14px; color: var(--mid); line-height: 1.6; margin-bottom: 28px; }
+    .success-code  {
+      background: var(--bg); border-radius: 12px; padding: 14px;
+      font-size: 20px; font-weight: 800; color: var(--primary);
+      letter-spacing: 2px; margin-bottom: 28px;
+    }
+    .success-btn {
+      width: 100%; padding: 16px;
+      border: none; border-radius: 14px;
+      background: var(--primary); color: #fff;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(232,160,32,0.35);
+    }
+
+    /* ─── DARK MODE ─────────────────────────── */
+    html[data-theme="dark"] {
+      --primary:    #F0B030;
+      --primary-bg: #2A2010;
+      --bg:         #141414;
+      --surface:    #1C1C1E;
+      --border:     #38383A;
+      --dark:       #E5E5E7;
+      --mid:        #8E8E93;
+      --light:      #505050;
+    }
+    [data-theme="dark"] .book-header  { background: rgba(20,20,20,0.97); border-bottom-color: #38383A; }
+    [data-theme="dark"] .back-btn     { background: #252528; }
+    [data-theme="dark"] .listing-card,
+    [data-theme="dark"] .section,
+    [data-theme="dark"] .confirm-section { background: #1C1C1E; border-color: #38383A; }
+    [data-theme="dark"] .date-box.active { background: #2A2010; }
+    [data-theme="dark"] .cal-nav-btn  { background: #252528; }
+    [data-theme="dark"] .cal-day.in-range { background: #2A2010; }
+    [data-theme="dark"] .nights-badge { background: #2A2010; }
+    [data-theme="dark"] .notice-box   { background: #1C1C1E; border-color: #38383A; }
+    [data-theme="dark"] .confirm-policy { background: #251E0A; border-color: #4A3810; }
+    [data-theme="dark"] .policy-title { color: #E8B040; }
+    [data-theme="dark"] .policy-text  { color: #A08040; }
+    [data-theme="dark"] .bottom-bar   { background: rgba(20,20,20,0.97); border-top-color: #38383A; }
+    [data-theme="dark"] .confirm-btn:disabled { background: #3A3A3C; color: #6A6A6C; }
+    [data-theme="dark"] .modal-sheet  { background: #1C1C1E; }
+    [data-theme="dark"] .success-icon { background: #1A2E1A; }
+    [data-theme="dark"] .success-code { background: #252528; }
+    [data-theme="dark"] .discount-tag { background: #2A2010; color: #D0900A; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="book-header">
+  <button class="back-btn" onclick="goBack()">←</button>
+  <span class="header-title" id="headerTitle">예약하기</span>
+</header>
+
+<!-- STEP 1: 날짜·인원·요금 -->
+<div id="step1">
+
+  <!-- 숙소 카드 -->
+  <div class="listing-card">
+    <img class="listing-thumb" id="listingThumb" src="" alt="" />
+    <div class="listing-info">
+      <div class="listing-type" id="listingType"></div>
+      <div class="listing-name" id="listingName"></div>
+      <div class="listing-rating">
+        <span class="star">⭐</span>
+        <span id="listingRating"></span>
+        <span>·</span>
+        <span id="listingReviews"></span>
+      </div>
+    </div>
+    <div class="listing-price">
+      ₩<span id="listingPrice"></span><br>
+      <span>/박</span>
+    </div>
+  </div>
+
+  <!-- 날짜 -->
+  <div class="section">
+    <div class="section-title">날짜 선택</div>
+    <div class="date-row">
+      <div class="date-box" id="checkInBox" onclick="openCal('in')">
+        <div class="date-label">체크인</div>
+        <div class="date-value placeholder" id="checkInVal">날짜 추가</div>
+      </div>
+      <div class="date-box" id="checkOutBox" onclick="openCal('out')">
+        <div class="date-label">체크아웃</div>
+        <div class="date-value placeholder" id="checkOutVal">날짜 추가</div>
+      </div>
+    </div>
+    <div class="calendar-wrap" id="calWrap">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+        <span class="cal-month" id="calMonth"></span>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+  <!-- 박 수 배지 -->
+  <div class="nights-badge" id="nightsBadge">
+    <span>🌙</span>
+    <span id="nightsText"></span>
+  </div>
+
+  <!-- 인원 -->
+  <div class="section" id="guestSection">
+    <div class="section-title">인원 선택</div>
+    <div class="guest-row">
+      <div class="guest-info">
+        <div class="guest-type">성인</div>
+        <div class="guest-sub">만 13세 이상</div>
+      </div>
+      <div class="counter">
+        <button class="counter-btn disabled" id="adultMinus" onclick="adjustGuest('adult',-1)">−</button>
+        <span class="counter-val" id="adultVal">1</span>
+        <button class="counter-btn" id="adultPlus" onclick="adjustGuest('adult',1)">+</button>
+      </div>
+    </div>
+    <div class="guest-row">
+      <div class="guest-info">
+        <div class="guest-type">어린이</div>
+        <div class="guest-sub">2 ~ 12세</div>
+      </div>
+      <div class="counter">
+        <button class="counter-btn" id="childMinus" onclick="adjustGuest('child',-1)">−</button>
+        <span class="counter-val" id="childVal">0</span>
+        <button class="counter-btn" id="childPlus" onclick="adjustGuest('child',1)">+</button>
+      </div>
+    </div>
+    <div class="guest-row">
+      <div class="guest-info">
+        <div class="guest-type">유아</div>
+        <div class="guest-sub">2세 미만</div>
+      </div>
+      <div class="counter">
+        <button class="counter-btn" id="infantMinus" onclick="adjustGuest('infant',-1)">−</button>
+        <span class="counter-val" id="infantVal">0</span>
+        <button class="counter-btn" id="infantPlus" onclick="adjustGuest('infant',1)">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 요금 내역 -->
+  <div class="section" id="priceSection" style="display:none">
+    <div class="section-title">요금 내역</div>
+    <div class="price-row">
+      <span class="price-row-label" id="priceBaseLabel"></span>
+      <span class="price-row-val" id="priceBaseVal"></span>
+    </div>
+    <div class="price-row">
+      <span class="price-row-label sub">청소비</span>
+      <span class="price-row-val" id="priceCleaning"></span>
+    </div>
+    <div class="price-row">
+      <span class="price-row-label sub">서비스 수수료</span>
+      <span class="price-row-val" id="priceService"></span>
+    </div>
+    <div class="price-row" id="discountRow" style="display:none">
+      <span class="price-row-label sub" style="color:var(--red)">
+        주간 할인
+        <span class="discount-tag" id="discountPct"></span>
+      </span>
+      <span class="price-row-val" style="color:var(--red)" id="discountVal"></span>
+    </div>
+    <div class="price-row price-total" style="border-top: 2px solid var(--border)">
+      <span class="price-row-label">총 합계</span>
+      <span class="price-row-val" id="priceTotalVal"></span>
+    </div>
+  </div>
+
+  <!-- 유의사항 -->
+  <div class="notice-box">
+    <b>예약 전 확인해 주세요</b><br>
+    예약 확정 후 24시간 이내 무료 취소 가능합니다. 이후에는 호스트의 취소 정책이 적용됩니다.
+    요금은 체크인 48시간 전 자동 청구됩니다.
+  </div>
+
+</div><!-- /step1 -->
+
+<!-- STEP 2: 예약 확인 -->
+<div id="step2">
+
+  <div class="section-title" style="padding: 20px 16px 0; font-size: 16px;">예약 내용 확인</div>
+
+  <div class="confirm-section" style="margin-top:12px; margin-left:16px; margin-right:16px;">
+    <div class="confirm-row">
+      <span class="confirm-key">숙소</span>
+      <span class="confirm-val" id="cfName"></span>
+    </div>
+    <div class="confirm-row">
+      <span class="confirm-key">체크인</span>
+      <span class="confirm-val" id="cfCheckin"></span>
+    </div>
+    <div class="confirm-row">
+      <span class="confirm-key">체크아웃</span>
+      <span class="confirm-val" id="cfCheckout"></span>
+    </div>
+    <div class="confirm-row">
+      <span class="confirm-key">인원</span>
+      <span class="confirm-val" id="cfGuests"></span>
+    </div>
+    <div class="confirm-row" style="border-bottom:none">
+      <span class="confirm-key" style="font-weight:700; color:var(--dark); font-size:14px">결제 금액</span>
+      <span class="confirm-val" style="font-size:16px; font-weight:800; color:var(--primary)" id="cfTotal"></span>
+    </div>
+  </div>
+
+  <div class="confirm-policy">
+    <div class="policy-title">🔒 취소 및 환불 정책</div>
+    <div class="policy-text">
+      체크인 5일 전까지 취소 시 전액 환불됩니다.<br>
+      체크인 5일 이내 취소 시 첫 번째 박 요금과 서비스 수수료는 환불되지 않습니다.
+    </div>
+  </div>
+
+  <div class="notice-box" style="margin-top:12px">
+    <b>결제 방법</b><br>
+    카카오페이, 신용·체크카드, 무통장 입금 중 선택하실 수 있습니다. 결제는 다음 화면에서 진행됩니다.
+  </div>
+
+</div><!-- /step2 -->
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="bottom-total">
+    <div class="bottom-total-label" id="bottomLabel">날짜를 선택해 주세요</div>
+    <div class="bottom-total-price" id="bottomPrice">—</div>
+    <div class="bottom-total-nights" id="bottomNights"></div>
+  </div>
+  <button class="confirm-btn" id="confirmBtn" onclick="handleConfirm()" disabled>
+    다음
+  </button>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal-sheet">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">예약이 완료됐어요!</div>
+    <div class="success-sub">호스트가 곧 예약을 확인하고<br>메시지를 보내드릴 예정입니다.</div>
+    <div class="success-code" id="reservationCode"></div>
+    <button class="success-btn" onclick="goHome()">홈으로 돌아가기</button>
+  </div>
+</div>
+
+<script>
+/* ───────────────────────────────────────────
+   DATA (same set as detail.html)
+─────────────────────────────────────────── */
+const LISTINGS = {
+  1: { name: '감성 한옥 스테이', type: '한옥 독채 · 서울 종로구', img: 'rooms/room6.jpg', price: 165000, rating: 4.93, reviews: 118, capacity: 4, cleaning: 30000 },
+  2: { name: '오션뷰 모던 아파트', type: '아파트 · 부산 해운대구', img: 'rooms/room7.jpg', price: 245000, rating: 4.88, reviews: 203, capacity: 4, cleaning: 45000 },
+  3: { name: '숲속 통나무 카빈', type: '독채 · 경기 가평군',    img: 'rooms/room4.jpg', price: 198000, rating: 4.97, reviews: 89,  capacity: 4, cleaning: 35000 },
+  4: { name: '제주 힐링 스테이', type: '독채 · 제주 서귀포시', img: 'rooms/room3.jpg', price: 185000, rating: 4.90, reviews: 76,  capacity: 2, cleaning: 30000 },
+  5: { name: '미니멀 모던 스튜디오', type: '스튜디오 · 서울 성수동', img: 'rooms/room2.jpg', price: 142000, rating: 4.85, reviews: 167, capacity: 2, cleaning: 25000 },
+  6: { name: '여의도 한강 리버뷰', type: '아파트 · 서울 영등포구', img: 'rooms/room5.jpg', price: 215000, rating: 4.91, reviews: 94,  capacity: 4, cleaning: 40000 },
+};
+
+/* ───────────────────────────────────────────
+   INIT
+─────────────────────────────────────────── */
+const params   = new URLSearchParams(location.search);
+const listingId = parseInt(params.get('id')) || 1;
+const L = LISTINGS[listingId];
+
+// Render listing card
+document.getElementById('listingThumb').src = L.img;
+document.getElementById('listingThumb').alt = L.name;
+document.getElementById('listingType').textContent = L.type;
+document.getElementById('listingName').textContent = L.name;
+document.getElementById('listingRating').textContent = L.rating;
+document.getElementById('listingReviews').textContent = `후기 ${L.reviews}개`;
+document.getElementById('listingPrice').textContent = L.price.toLocaleString();
+
+/* ───────────────────────────────────────────
+   CALENDAR STATE
+─────────────────────────────────────────── */
+const today = new Date(); today.setHours(0,0,0,0);
+let calYear  = today.getFullYear();
+let calMonth = today.getMonth();
+let calMode  = null;   // 'in' | 'out'
+
+let checkIn  = null;
+let checkOut = null;
+
+function fmtDate(d) {
+  return `${d.getMonth()+1}월 ${d.getDate()}일`;
+}
+function fmtFull(d) {
+  const y = d.getFullYear(), m = d.getMonth()+1, day = d.getDate();
+  return `${y}년 ${m}월 ${day}일`;
+}
+function dayDiff(a, b) {
+  return Math.round((b - a) / 86400000);
+}
+
+/* ───────────────────────────────────────────
+   CALENDAR RENDER
+─────────────────────────────────────────── */
+const DOWS = ['일','월','화','수','목','금','토'];
+const MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+function openCal(mode) {
+  calMode = mode;
+  document.getElementById('checkInBox').classList.toggle('active', mode === 'in');
+  document.getElementById('checkOutBox').classList.toggle('active', mode === 'out');
+  document.getElementById('calWrap').classList.add('open');
+  renderCal();
+}
+
+function closeCal() {
+  calMode = null;
+  document.getElementById('calWrap').classList.remove('open');
+  document.getElementById('checkInBox').classList.remove('active');
+  document.getElementById('checkOutBox').classList.remove('active');
+}
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderCal();
+}
+
+function renderCal() {
+  document.getElementById('calMonth').textContent = `${calYear}년 ${MONTHS_KO[calMonth]}`;
+  const grid = document.getElementById('calGrid');
+
+  // day-of-week headers
+  let html = DOWS.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const last  = new Date(calYear, calMonth+1, 0).getDate();
+
+  for (let i = 0; i < first; i++) html += `<div class="cal-day empty"></div>`;
+
+  for (let d = 1; d <= last; d++) {
+    const date = new Date(calYear, calMonth, d);
+    const isPast = date < today;
+    const isStart = checkIn  && date.getTime() === checkIn.getTime();
+    const isEnd   = checkOut && date.getTime() === checkOut.getTime();
+    const inRange = checkIn && checkOut && date > checkIn && date < checkOut;
+
+    let cls = 'cal-day';
+    if (isPast) cls += ' disabled';
+    else if (isStart && isEnd) cls += ' selected-start selected-end';
+    else if (isStart) cls += ' selected-start' + (checkOut ? '' : ' range-start-only');
+    else if (isEnd)   cls += ' selected-end';
+    else if (inRange) cls += ' in-range';
+
+    html += `<div class="${cls}" onclick="pickDay(${calYear},${calMonth},${d})">${d}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function pickDay(y, m, d) {
+  const picked = new Date(y, m, d);
+
+  if (calMode === 'in') {
+    checkIn = picked;
+    if (checkOut && checkOut <= checkIn) checkOut = null;
+    updateDateUI();
+    // auto-switch to checkout mode
+    calMode = 'out';
+    document.getElementById('checkInBox').classList.remove('active');
+    document.getElementById('checkOutBox').classList.add('active');
+  } else {
+    if (picked <= checkIn) {
+      checkIn = picked;
+      checkOut = null;
+      calMode = 'out';
+    } else {
+      checkOut = picked;
+      closeCal();
+    }
+    updateDateUI();
+  }
+  renderCal();
+  recalcPrice();
+}
+
+function updateDateUI() {
+  const inEl  = document.getElementById('checkInVal');
+  const outEl = document.getElementById('checkOutVal');
+
+  if (checkIn) {
+    inEl.textContent = fmtDate(checkIn);
+    inEl.classList.remove('placeholder');
+  } else {
+    inEl.textContent = '날짜 추가';
+    inEl.classList.add('placeholder');
+  }
+  if (checkOut) {
+    outEl.textContent = fmtDate(checkOut);
+    outEl.classList.remove('placeholder');
+  } else {
+    outEl.textContent = '날짜 추가';
+    outEl.classList.add('placeholder');
+  }
+}
+
+/* ───────────────────────────────────────────
+   GUEST COUNTER
+─────────────────────────────────────────── */
+let guests = { adult: 1, child: 0, infant: 0 };
+
+function adjustGuest(type, delta) {
+  const maxTotal = L.capacity;
+  const total = guests.adult + guests.child;
+
+  if (delta === 1) {
+    if (type === 'infant') {
+      guests.infant = Math.min(guests.infant + 1, 5);
+    } else {
+      if (total >= maxTotal) return;
+      guests[type]++;
+    }
+  } else {
+    if (type === 'adult')  guests.adult  = Math.max(1, guests.adult  - 1);
+    if (type === 'child')  guests.child  = Math.max(0, guests.child  - 1);
+    if (type === 'infant') guests.infant = Math.max(0, guests.infant - 1);
+  }
+  renderGuests();
+  recalcPrice();
+}
+
+function renderGuests() {
+  document.getElementById('adultVal').textContent  = guests.adult;
+  document.getElementById('childVal').textContent  = guests.child;
+  document.getElementById('infantVal').textContent = guests.infant;
+
+  const total = guests.adult + guests.child;
+  document.getElementById('adultMinus').className = 'counter-btn' + (guests.adult <= 1 ? ' disabled' : '');
+  document.getElementById('childMinus').className = 'counter-btn' + (guests.child <= 0 ? ' disabled' : '');
+  document.getElementById('infantMinus').className= 'counter-btn' + (guests.infant<= 0 ? ' disabled' : '');
+  document.getElementById('adultPlus').className  = 'counter-btn' + (total >= L.capacity ? ' disabled' : '');
+  document.getElementById('childPlus').className  = 'counter-btn' + (total >= L.capacity ? ' disabled' : '');
+}
+
+/* ───────────────────────────────────────────
+   PRICE CALCULATION
+─────────────────────────────────────────── */
+function recalcPrice() {
+  if (!checkIn || !checkOut) {
+    document.getElementById('priceSection').style.display = 'none';
+    document.getElementById('nightsBadge').classList.remove('show');
+    document.getElementById('confirmBtn').disabled = true;
+    document.getElementById('bottomLabel').textContent = '날짜를 선택해 주세요';
+    document.getElementById('bottomPrice').textContent = '—';
+    document.getElementById('bottomNights').textContent = '';
+    return;
+  }
+
+  const nights   = dayDiff(checkIn, checkOut);
+  const base     = L.price * nights;
+  const cleaning = L.cleaning;
+  const service  = Math.round(base * 0.1);
+
+  // 주간 할인 (7박 이상 15%)
+  const discountRate = nights >= 7 ? 0.15 : 0;
+  const discount = Math.round(base * discountRate);
+  const total    = base + cleaning + service - discount;
+
+  // nights badge
+  const badge = document.getElementById('nightsBadge');
+  badge.classList.add('show');
+  document.getElementById('nightsText').textContent = `${nights}박 선택됨`;
+
+  // price section
+  const ps = document.getElementById('priceSection');
+  ps.style.display = 'block';
+  document.getElementById('priceBaseLabel').textContent = `₩${L.price.toLocaleString()} × ${nights}박`;
+  document.getElementById('priceBaseVal').textContent   = `₩${base.toLocaleString()}`;
+  document.getElementById('priceCleaning').textContent  = `₩${cleaning.toLocaleString()}`;
+  document.getElementById('priceService').textContent   = `₩${service.toLocaleString()}`;
+
+  if (discountRate > 0) {
+    document.getElementById('discountRow').style.display = 'flex';
+    document.getElementById('discountPct').textContent   = `${Math.round(discountRate*100)}%`;
+    document.getElementById('discountVal').textContent   = `−₩${discount.toLocaleString()}`;
+  } else {
+    document.getElementById('discountRow').style.display = 'none';
+  }
+
+  document.getElementById('priceTotalVal').textContent  = `₩${total.toLocaleString()}`;
+
+  // bottom bar
+  document.getElementById('bottomLabel').textContent = `${nights}박 총 요금`;
+  document.getElementById('bottomPrice').textContent = `₩${total.toLocaleString()}`;
+  document.getElementById('bottomNights').textContent = `${fmtDate(checkIn)} → ${fmtDate(checkOut)}`;
+  document.getElementById('confirmBtn').disabled = false;
+
+  return { nights, total };
+}
+
+/* ───────────────────────────────────────────
+   STEP NAVIGATION
+─────────────────────────────────────────── */
+let currentStep = 1;
+
+function handleConfirm() {
+  if (currentStep === 1) {
+    goToStep2();
+  } else {
+    showSuccess();
+  }
+}
+
+function goToStep2() {
+  currentStep = 2;
+
+  // fill confirm values
+  const nights = dayDiff(checkIn, checkOut);
+  const calc = recalcPrice();
+  const total  = parseInt(document.getElementById('priceTotalVal').textContent.replace(/[₩,]/g,''));
+
+  document.getElementById('cfName').textContent    = L.name;
+  document.getElementById('cfCheckin').textContent = fmtFull(checkIn) + ' 오후 3:00';
+  document.getElementById('cfCheckout').textContent= fmtFull(checkOut) + ' 오전 11:00';
+
+  const gParts = [`성인 ${guests.adult}명`];
+  if (guests.child  > 0) gParts.push(`어린이 ${guests.child}명`);
+  if (guests.infant > 0) gParts.push(`유아 ${guests.infant}명`);
+  document.getElementById('cfGuests').textContent = gParts.join(', ');
+  document.getElementById('cfTotal').textContent  = `₩${total.toLocaleString()}`;
+
+  // swap views
+  document.getElementById('step1').style.display = 'none';
+  document.getElementById('step2').style.display = 'block';
+
+  document.getElementById('headerTitle').textContent = '예약 확인';
+  document.getElementById('confirmBtn').textContent = '결제하기';
+  document.getElementById('bottomLabel').textContent = `${nights}박 최종 금액`;
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  if (currentStep === 2) {
+    currentStep = 1;
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('headerTitle').textContent = '예약하기';
+    document.getElementById('confirmBtn').textContent = '다음';
+    window.scrollTo(0, 0);
+  } else {
+    history.back();
+  }
+}
+
+/* ───────────────────────────────────────────
+   SUCCESS
+─────────────────────────────────────────── */
+function showSuccess() {
+  // random reservation code
+  const code = 'AB' + Math.random().toString(36).substring(2,8).toUpperCase();
+  document.getElementById('reservationCode').textContent = code;
+  document.getElementById('successModal').classList.add('open');
+}
+
+function goHome() {
+  location.href = 'index.html';
+}
+
+/* init */
+renderGuests();
+</script>
+</body>
+</html>

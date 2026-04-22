@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>숙소 상세 — Airbnb</title>
+  <script src="common.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary:    #E8A020;
+      --primary-bg: #FEF9EE;
+      --bg:         #F5F4F1;
+      --surface:    #FFFFFF;
+      --border:     #EFEFED;
+      --dark:       #1A1A1A;
+      --mid:        #888;
+      --light:      #C8C8C0;
+      --tag-bg:     #FFF4DC;
+      --tag-color:  #B07010;
+    }
+
+    body {
+      font-family: -apple-system, 'Pretendard', 'SF Pro Display', sans-serif;
+      background: var(--bg);
+      max-width: 390px;
+      margin: 0 auto;
+      min-height: 100dvh;
+    }
+
+    /* ── FLOATING HEADER ─────────────────── */
+    .detail-header {
+      position: fixed;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 390px;
+      z-index: 100;
+      padding: 50px 18px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.25s, box-shadow 0.25s;
+    }
+    .detail-header.scrolled {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+    }
+    .hdr-right { display: flex; gap: 8px; }
+    .hdr-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.14);
+      transition: transform 0.1s;
+    }
+    .hdr-btn:active { transform: scale(0.90); }
+    .hdr-back { font-size: 21px; padding-right: 1px; }
+    .detail-header.scrolled .hdr-btn {
+      background: var(--surface);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    /* ── HERO ────────────────────────────── */
+    .hero {
+      height: 42vh;
+      min-height: 260px;
+      max-height: 320px;
+      overflow: hidden;
+      position: relative;
+    }
+    .hero-img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .hero-gradient {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 110px;
+      background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.28));
+      pointer-events: none;
+    }
+
+    /* ── CONTENT CARD (위로 올라와 hero 덮음) */
+    .content-card {
+      background: var(--surface);
+      border-radius: 26px 26px 0 0;
+      margin-top: -26px;
+      position: relative;
+      z-index: 20;
+      padding: 10px 0 0;
+    }
+
+    /* drag handle */
+    .drag-handle {
+      width: 36px; height: 4px;
+      border-radius: 2px;
+      background: #E0DED8;
+      margin: 0 auto 20px;
+    }
+
+    /* ── KEYWORDS ────────────────────────── */
+    .keywords-row {
+      display: flex; gap: 6px;
+      padding: 0 22px 20px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .keywords-row::-webkit-scrollbar { display: none; }
+    .kw-tag {
+      flex-shrink: 0;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: var(--tag-bg);
+      font-size: 11.5px; font-weight: 600;
+      color: var(--tag-color);
+      white-space: nowrap;
+      letter-spacing: 0.1px;
+    }
+
+    /* ── BASIC INFO ──────────────────────── */
+    .info-block { padding: 0 22px 22px; }
+
+    .listing-name {
+      font-size: 23px; font-weight: 700;
+      color: var(--dark);
+      letter-spacing: -0.6px; line-height: 1.28;
+      margin-bottom: 7px;
+    }
+    .listing-sub {
+      font-size: 13px; color: var(--mid); line-height: 1.5;
+      margin-bottom: 11px;
+    }
+    .meta-row {
+      display: flex; align-items: center;
+      flex-wrap: wrap; gap: 5px;
+      font-size: 13px; color: var(--dark);
+    }
+    .meta-rating { font-weight: 700; }
+    .meta-dot { color: var(--light); font-size: 10px; }
+    .meta-link { color: var(--mid); }
+    .superhost-pill {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 11px; font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-bg);
+      padding: 3px 9px; border-radius: 10px;
+      margin-left: 3px;
+    }
+
+    /* ── SECTION ─────────────────────────── */
+    .section {
+      padding: 22px;
+      border-top: 1px solid var(--border);
+    }
+    .sec-head {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .sec-title {
+      font-size: 16px; font-weight: 700;
+      color: var(--dark); letter-spacing: -0.3px;
+    }
+    .sec-more {
+      font-size: 12.5px; font-weight: 600;
+      color: var(--primary); cursor: pointer;
+    }
+
+    /* ── AMENITIES ───────────────────────── */
+    .amenities-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px 8px;
+    }
+    .amenity-item {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 7px;
+    }
+    .amenity-icon {
+      width: 50px; height: 50px;
+      border-radius: 18px;
+      background: var(--bg);
+      display: flex; align-items: center;
+      justify-content: center; font-size: 22px;
+    }
+    .amenity-label {
+      font-size: 10px; color: var(--mid);
+      font-weight: 500; text-align: center;
+      line-height: 1.3;
+    }
+
+    /* ── DESCRIPTION ─────────────────────── */
+    .desc-wrapper { position: relative; }
+    .desc-text {
+      font-size: 14px; color: #5A5A5A; line-height: 1.82;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .desc-text.collapsed { max-height: 74px; }
+    .desc-text.expanded  { max-height: 2000px; }
+    .desc-fade {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, var(--surface));
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .desc-fade.gone { opacity: 0; }
+    .desc-btn {
+      margin-top: 12px;
+      font-size: 13px; font-weight: 700;
+      color: var(--dark);
+      background: none; border: none; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 0;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .desc-arrow {
+      font-size: 9px; display: inline-block;
+      transition: transform 0.25s;
+    }
+    .desc-btn.open .desc-arrow { transform: rotate(180deg); }
+
+    /* ── HOST ────────────────────────────── */
+    .host-row {
+      display: flex; align-items: center; gap: 14px;
+    }
+    .host-avatar {
+      width: 54px; height: 54px; border-radius: 50%;
+      display: flex; align-items: center;
+      justify-content: center;
+      font-size: 20px; font-weight: 700;
+      color: #A06000; flex-shrink: 0;
+    }
+    .host-info { flex: 1; min-width: 0; }
+    .host-name {
+      font-size: 15px; font-weight: 700;
+      color: var(--dark); margin-bottom: 3px;
+    }
+    .host-meta {
+      font-size: 12.5px; color: var(--mid); line-height: 1.65;
+    }
+    .host-msg-btn {
+      padding: 10px 16px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-size: 13px; font-weight: 600;
+      color: var(--dark); cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.12s;
+    }
+    .host-msg-btn:active { background: var(--bg); }
+
+    /* ── LOCATION ────────────────────────── */
+    .location-box {
+      background: var(--bg);
+      border-radius: 18px; padding: 16px 18px;
+    }
+    .location-addr {
+      font-size: 14px; font-weight: 600;
+      color: var(--dark); margin-bottom: 5px;
+    }
+    .location-sub {
+      font-size: 13px; color: var(--mid);
+      line-height: 1.65; margin-bottom: 13px;
+    }
+    .map-link-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 13px; font-weight: 700;
+      color: var(--primary); cursor: pointer;
+    }
+
+    /* ── REVIEWS ─────────────────────────── */
+    .reviews-top {
+      display: flex; align-items: center;
+      gap: 14px; margin-bottom: 18px;
+    }
+    .score-big {
+      font-size: 38px; font-weight: 700;
+      color: var(--dark); line-height: 1;
+      letter-spacing: -1px;
+    }
+    .score-side { }
+    .score-stars { font-size: 14px; letter-spacing: 2px; }
+    .score-count { font-size: 12px; color: var(--mid); margin-top: 3px; }
+
+    .review-card {
+      background: var(--bg);
+      border-radius: 18px; padding: 16px;
+      margin-bottom: 10px;
+    }
+    .review-card:last-child { margin-bottom: 0; }
+    .review-header {
+      display: flex; align-items: center;
+      gap: 10px; margin-bottom: 10px;
+    }
+    .review-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+      color: #A06000; flex-shrink: 0;
+    }
+    .review-who { flex: 1; }
+    .review-name {
+      font-size: 13.5px; font-weight: 700; color: var(--dark);
+    }
+    .review-date { font-size: 11px; color: var(--mid); margin-top: 1px; }
+    .review-stars { font-size: 12px; letter-spacing: 1px; }
+    .review-body {
+      font-size: 13.5px; color: #5A5A5A; line-height: 1.72;
+    }
+
+    /* ── RULES ───────────────────────────── */
+    .rules-list { display: flex; flex-direction: column; gap: 14px; }
+    .rule-row { display: flex; align-items: flex-start; gap: 12px; }
+    .rule-icon {
+      font-size: 16px; flex-shrink: 0;
+      width: 26px; text-align: center; margin-top: 1px;
+    }
+    .rule-text { font-size: 13.5px; color: #5A5A5A; line-height: 1.55; }
+
+    /* ── BOTTOM BAR ──────────────────────── */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 390px;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid rgba(0,0,0,0.06);
+      padding: 12px 22px 28px;
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 16px;
+      z-index: 200;
+    }
+    .bar-price {
+      font-size: 20px; font-weight: 700;
+      color: var(--dark); letter-spacing: -0.5px;
+    }
+    .bar-price span { font-size: 13px; font-weight: 400; color: var(--mid); }
+    .bar-sub { font-size: 12px; color: var(--mid); margin-top: 2px; }
+    .book-btn {
+      flex: 1; max-width: 168px; height: 50px;
+      border-radius: 25px; border: none;
+      background: var(--primary);
+      color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; letter-spacing: -0.2px;
+      box-shadow: 0 6px 20px rgba(232,160,32,0.38);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .book-btn:active {
+      transform: scale(0.96);
+      box-shadow: 0 3px 10px rgba(232,160,32,0.25);
+    }
+
+    /* ══════════════════════════════════════
+       DARK MODE
+    ══════════════════════════════════════ */
+    html[data-theme="dark"] {
+      --bg:         #141414;
+      --surface:    #1C1C1E;
+      --border:     #2C2C2E;
+      --dark:       #E5E5E7;
+      --mid:        #8E8E93;
+      --light:      #48484A;
+      --primary:    #F0B030;
+      --primary-bg: #2A2010;
+      --tag-bg:     #252010;
+      --tag-color:  #F0B030;
+    }
+    [data-theme="dark"] .content-card      { background: #1C1C1E; }
+    [data-theme="dark"] .drag-handle       { background: #38383A; }
+    [data-theme="dark"] .hero-gradient     { background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.5)); }
+    [data-theme="dark"] .amenity-icon      { background: #252528; }
+    [data-theme="dark"] .desc-fade         { background: linear-gradient(to bottom, transparent, #1C1C1E); }
+    [data-theme="dark"] .desc-text         { color: #AEAEB2; }
+    [data-theme="dark"] .host-msg-btn      { background: #252528; border-color: #3A3A3C; }
+    [data-theme="dark"] .location-box      { background: #252528; }
+    [data-theme="dark"] .review-card       { background: #252528; }
+    [data-theme="dark"] .review-body       { color: #AEAEB2; }
+    [data-theme="dark"] .rule-text         { color: #AEAEB2; }
+    [data-theme="dark"] .bottom-bar        { background: rgba(28,28,30,0.96); border-top-color: #2C2C2E; }
+    [data-theme="dark"] .detail-header.scrolled { background: rgba(28,28,30,0.95); }
+    [data-theme="dark"] .hdr-btn           { background: rgba(30,30,30,0.9); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    [data-theme="dark"] .detail-header.scrolled .hdr-btn { background: #2C2C2E; box-shadow: none; }
+    [data-theme="dark"] .book-btn          { box-shadow: 0 6px 20px rgba(240,176,48,0.28); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="detail-header" id="detailHeader">
+  <button class="hdr-btn hdr-back" onclick="history.back()">‹</button>
+  <div class="hdr-right">
+    <button class="hdr-btn" id="wishBtn" onclick="toggleWish()">🤍</button>
+    <button class="hdr-btn">⋯</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <img class="hero-img" id="heroImg" src="" alt="" />
+  <div class="hero-gradient"></div>
+</div>
+
+<!-- CONTENT CARD -->
+<div class="content-card">
+  <div class="drag-handle"></div>
+
+  <!-- 키워드 -->
+  <div class="keywords-row" id="keywordsRow"></div>
+
+  <!-- 기본 정보 -->
+  <div class="info-block" id="basicInfo"></div>
+
+  <!-- 편의시설 -->
+  <div class="section" id="amenitiesSection"></div>
+
+  <!-- 숙소 소개 -->
+  <div class="section" id="descSection"></div>
+
+  <!-- 호스트 -->
+  <div class="section" id="hostSection"></div>
+
+  <!-- 위치 -->
+  <div class="section" id="locationSection"></div>
+
+  <!-- 후기 -->
+  <div class="section" id="reviewsSection"></div>
+
+  <!-- 이용 규칙 -->
+  <div class="section" id="rulesSection"></div>
+
+  <div style="height:92px"></div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar" id="bottomBar"></div>
+
+<script>
+/* ════════════════════════════════════
+   DATA
+════════════════════════════════════ */
+const DETAILS = {
+
+  1: {
+    name: '감성 한옥 스테이',
+    sub: '서울 종로구 북촌 · 한옥 독채 · 최대 4인',
+    img: 'rooms/room6.jpg',
+    price: 165000, rating: 4.93, reviews: 118,
+    superhost: true, capacity: '최대 4인', type: '한옥 독채',
+    keywords: ['감성 숙소', '전통 체험', '포토스팟', '조용한 숙소', '도보 관광', '한옥 체험'],
+    amenities: [
+      { icon: '📶', label: '와이파이' }, { icon: '🍳', label: '주방' },
+      { icon: '❄️', label: '에어컨' },  { icon: '🔥', label: '온수 난방' },
+      { icon: '🌿', label: '전통 마당' },{ icon: '☕', label: '다구 세트' },
+      { icon: '🧺', label: '세탁기' },  { icon: '💈', label: '드라이어' },
+    ],
+    fullDesc: `북촌 한옥마을 골목 깊숙이 자리한, 100년 역사의 고택을 감성 가득하게 리모델링한 독채 숙소입니다.\n\n경복궁과 창덕궁 사이, 낮은 기와지붕이 물결처럼 이어지는 북촌의 중심에 위치해 있어요. 낮에는 고즈넉한 골목을 산책하고, 밤에는 달빛 아래 마당에서 차 한 잔의 여유를 즐겨보세요.\n\n전통 한식 다구 세트와 다양한 차(녹차·보리차·유자차)가 준비되어 있으며, 마당에는 작은 항아리 정원이 꾸며져 있어 사계절 다른 모습을 선사합니다.`,
+    host: { name: '지은', avatar: '지', color: '#F8DFA0', stays: 3, years: 3, superhost: true, respRate: 100, respTime: '1시간 이내' },
+    address: '서울특별시 종로구 북촌로 일대',
+    locationSub: '경복궁역 3번 출구 도보 12분 · 창덕궁 도보 8분',
+    reviewList: [
+      { name: '민지', avatar: '민', color: '#FDECC8', date: '2025년 4월', stars: 5,
+        text: '한옥의 고즈넉한 분위기에 완전히 반했어요. 마당에 앉아 달빛 보며 차 한잔 마셨던 기억이 오래 남을 것 같아요. 이런 숙소가 서울에 있다는 게 믿기지 않았습니다.' },
+      { name: '준혁', avatar: '준', color: '#F9E0B0', date: '2025년 3월', stars: 5,
+        text: '북촌 골목 깊숙이 있어서 완전한 프라이버시가 보장됐어요. 사진이 너무 잘 나와서 SNS에 올렸더니 난리났습니다 😄 다음에도 꼭 다시 오고 싶어요.' },
+      { name: '예은', avatar: '예', color: '#FAE8C0', date: '2025년 2월', stars: 5,
+        text: '지은 호스트님이 전통 다례 체험까지 준비해주셨어요. 그냥 숙박이 아닌 특별한 문화 경험이 됐습니다.' },
+    ],
+    rules: [
+      { icon: '🕒', text: '체크인 15:00 이후 · 체크아웃 11:00 이전' },
+      { icon: '🚭', text: '전 구역 금연 (마당 포함)' },
+      { icon: '🐾', text: '반려동물 동반 불가' },
+      { icon: '🎉', text: '파티 및 행사 금지' },
+      { icon: '🔇', text: '밤 10시 이후 소음 주의' },
+      { icon: '👟', text: '실내 슬리퍼 착용 필수 (체크인 시 제공)' },
+    ],
+  },
+
+  2: {
+    name: '오션뷰 모던 아파트',
+    sub: '부산 해운대구 · 아파트 18층 · 최대 4인',
+    img: 'rooms/room7.jpg',
+    price: 245000, rating: 4.88, reviews: 203,
+    superhost: true, capacity: '최대 4인', type: '아파트',
+    keywords: ['경치가 좋음', '편안한 숙소', '교통 편리', '도시 숙소', '오션뷰', '주차 가능'],
+    amenities: [
+      { icon: '📶', label: '와이파이' },   { icon: '🍳', label: '풀옵션 주방' },
+      { icon: '❄️', label: '에어컨' },    { icon: '🔥', label: '난방' },
+      { icon: '🚗', label: '주차 1대' },  { icon: '🧺', label: '세탁/건조기' },
+      { icon: '📺', label: '스마트 TV' }, { icon: '🛁', label: '욕조' },
+      { icon: '☕', label: '커피머신' },  { icon: '💈', label: '드라이어' },
+      { icon: '🔑', label: '스마트 잠금' },{ icon: '🌡', label: '온수 24h' },
+    ],
+    fullDesc: `해운대 해변이 한눈에 내려다보이는 18층 고층 아파트입니다. 소음과 시선이 닿지 않는 높이에서 탁 트인 오션뷰와 함께 완벽한 편안함을 경험하세요.\n\n거실 통창으로 펼쳐지는 일출과 일몰은 이 숙소만의 특별한 선물입니다. 주방에는 인덕션·전자레인지·에어프라이어·식기세척기까지 풀옵션으로 갖춰져 있어 직접 요리하기에도 완벽해요.\n\n해운대 해수욕장까지 도보 3분, 해운대역까지 도보 7분 거리입니다.`,
+    host: { name: '민준', avatar: '민', color: '#F8D0A8', stays: 5, years: 4, superhost: true, respRate: 98, respTime: '1시간 이내' },
+    address: '부산광역시 해운대구 해운대해변로 일대',
+    locationSub: '해운대역 3번 출구 도보 7분 · 해운대 해수욕장 도보 3분',
+    reviewList: [
+      { name: '수현', avatar: '수', color: '#FDECC8', date: '2025년 4월', stars: 5,
+        text: '아침에 눈 뜨자마자 보이는 오션뷰가 진짜 감동이에요. 사진으로는 다 담을 수 없어요. 주방도 완벽해서 직접 요리해 먹었는데 바다 보면서 밥 먹는 기분이 너무 좋았습니다.' },
+      { name: '동현', avatar: '동', color: '#F9E0B0', date: '2025년 3월', stars: 5,
+        text: '청결도 만점입니다. 민준 호스트님이 체크인 전날 모든 안내를 미리 해주셔서 도착 후 불편함이 없었어요. 주차도 지하에 있어서 편했습니다.' },
+      { name: '하린', avatar: '하', color: '#FAE8C0', date: '2025년 2월', stars: 4,
+        text: '뷰 하나는 정말 최고예요. 편의시설도 다 갖춰져 있고 위치도 좋아요. 주말에는 주변이 많이 붐빈다는 점은 참고하세요.' },
+    ],
+    rules: [
+      { icon: '🕒', text: '체크인 15:00 이후 · 체크아웃 11:00 이전' },
+      { icon: '🚭', text: '전 구역 금연 (베란다 포함)' },
+      { icon: '🐾', text: '소형 반려동물 1마리 가능 (사전 고지 필수)' },
+      { icon: '🎉', text: '파티 및 대규모 모임 금지' },
+      { icon: '🔇', text: '밤 11시 이후 소음 주의' },
+      { icon: '🚗', text: '지하 주차 1대 제공 · 추가 주차 불가' },
+    ],
+  },
+
+  3: {
+    name: '숲속 통나무 카빈',
+    sub: '경기 가평군 · 통나무 독채 · 최대 4인',
+    img: 'rooms/room4.jpg',
+    price: 198000, rating: 4.97, reviews: 89,
+    superhost: false, capacity: '최대 4인', type: '독채',
+    keywords: ['한적한 숙소', '자연 속', '힐링', '조용한 숙소', '반려동물 환영', '바베큐 가능'],
+    amenities: [
+      { icon: '📶', label: '와이파이' }, { icon: '🍳', label: '주방' },
+      { icon: '🔥', label: '벽난로' },  { icon: '🏕', label: '바베큐' },
+      { icon: '🐾', label: '반려동물' }, { icon: '🧺', label: '세탁기' },
+      { icon: '📺', label: 'TV' },      { icon: '🌡', label: '온수' },
+    ],
+    fullDesc: `도시의 소음과 스트레스를 뒤로 하고, 가평 깊은 숲 속에서 진정한 휴식을 경험해 보세요.\n\n서울에서 차로 약 1시간 거리, 북한강 인근 울창한 숲속에 자리한 독립 통나무 카빈입니다. 주변 반경 200m 이내 다른 건물이 없어 완전한 프라이버시가 보장됩니다.\n\n겨울에는 통나무 벽난로에 불을 피우며 창밖의 눈 덮인 숲을 감상하고, 여름에는 데크에서 새소리와 물소리를 들으며 바베큐를 즐겨보세요.`,
+    host: { name: '하준', avatar: '하', color: '#F8CEAC', stays: 2, years: 2, superhost: false, respRate: 95, respTime: '몇 시간 이내' },
+    address: '경기도 가평군 북한강로 일대',
+    locationSub: '가평역에서 차로 15분 · 자라섬까지 차로 10분',
+    reviewList: [
+      { name: '재은', avatar: '재', color: '#FDECC8', date: '2025년 4월', stars: 5,
+        text: '말 그대로 힐링이에요. 핸드폰 없이 자연 속에서 하루를 보냈는데 몸과 마음이 충전되는 느낌이었어요. 밤에 데크에 누워 별 보는 경험은 평생 잊지 못할 것 같아요.' },
+      { name: '민서', avatar: '민', color: '#F9E0B0', date: '2025년 3월', stars: 5,
+        text: '강아지랑 함께 왔는데 정말 최고였어요! 넓은 마당에서 강아지 뛰어노는 동안 저는 해먹에서 책 읽었어요. 벽난로도 낭만적이고 바베큐도 즐거웠습니다.' },
+      { name: '태영', avatar: '태', color: '#FAE8C0', date: '2025년 2월', stars: 5,
+        text: '혼자 왔는데 전혀 쓸쓸하지 않았어요. 새벽에 눈이 와서 눈 내리는 숲을 혼자 감상했는데 정말 영화 같았어요.' },
+    ],
+    rules: [
+      { icon: '🕒', text: '체크인 14:00 이후 · 체크아웃 11:00 이전' },
+      { icon: '🚭', text: '실내 금연 (외부 지정 구역만 가능)' },
+      { icon: '🐾', text: '반려동물 2마리까지 허용 (청소비 10,000원)' },
+      { icon: '🏕', text: '바베큐 이용 후 정리 필수' },
+      { icon: '🔥', text: '벽난로 사용 시 반드시 환기' },
+      { icon: '🌙', text: '자연환경 훼손 및 쓰레기 투기 금지' },
+    ],
+  },
+
+  4: {
+    name: '제주 힐링 스테이',
+    sub: '제주 서귀포시 · 독채 · 최대 2인',
+    img: 'rooms/room3.jpg',
+    price: 185000, rating: 4.90, reviews: 76,
+    superhost: false, capacity: '최대 2인', type: '독채',
+    keywords: ['힐링', '자연 속', '경치가 좋음', '한적한 숙소', '커플 추천', '테라스'],
+    amenities: [
+      { icon: '📶', label: '와이파이' }, { icon: '🍳', label: '주방' },
+      { icon: '❄️', label: '에어컨' },  { icon: '🌿', label: '테라스' },
+      { icon: '🛁', label: '욕조' },    { icon: '☕', label: '커피머신' },
+      { icon: '💈', label: '드라이어' }, { icon: '🌡', label: '온수' },
+    ],
+    fullDesc: `제주 서귀포 조용한 언덕 위, 바다가 한눈에 펼쳐지는 독채 숙소입니다. 천천히, 느리게, 제주를 온몸으로 느껴보세요.\n\n테라스에서 바라보는 서귀포 앞바다의 풍경은 아무 때나 와도 새롭습니다. 맑은 날에는 마라도까지, 흐린 날에는 파도 소리만으로도 충분히 아름다운 곳이에요.\n\n2인 전용으로 설계된 아늑한 공간이라 커플이나 친한 친구 둘이 오기에 딱 좋아요. 욕조에서 바다를 보며 느긋하게 시간을 보내다 보면 어느새 제주의 시간 속에 녹아들게 됩니다.`,
+    host: { name: '소율', avatar: '소', color: '#FAE8B0', stays: 2, years: 1, superhost: false, respRate: 97, respTime: '몇 시간 이내' },
+    address: '제주특별자치도 서귀포시 일대',
+    locationSub: '서귀포 버스터미널 차로 10분 · 천지연 폭포 도보 20분',
+    reviewList: [
+      { name: '채원', avatar: '채', color: '#FDECC8', date: '2025년 4월', stars: 5,
+        text: '남자친구랑 둘이 왔는데 여기서 보낸 이틀이 제 인생 최고의 여행이에요. 테라스에서 해 지는 거 보면서 와인 한 잔... 말로 다 표현이 안 돼요.' },
+      { name: '유나', avatar: '유', color: '#F9E0B0', date: '2025년 3월', stars: 5,
+        text: '제주에 여러 번 왔지만 이렇게 힐링이 된 건 처음이에요. 욕조 창밖으로 바다 보이는 거 진짜 감동이고, 소율 호스트님이 환영 과일까지 준비해주셔서 더 감동받았습니다.' },
+      { name: '준서', avatar: '준', color: '#FAE8C0', date: '2025년 1월', stars: 5,
+        text: '겨울 제주인데도 너무 좋았어요. 바람 소리 들으면서 따뜻한 욕조에 몸 담그니까 모든 게 다 괜찮아지는 느낌이었어요.' },
+    ],
+    rules: [
+      { icon: '🕒', text: '체크인 15:00 이후 · 체크아웃 11:00 이전' },
+      { icon: '🚭', text: '전 구역 금연' },
+      { icon: '🐾', text: '반려동물 동반 불가' },
+      { icon: '👫', text: '최대 2인 이용' },
+      { icon: '🔇', text: '밤 10시 이후 음악·소음 금지' },
+      { icon: '🌿', text: '테라스 식물 및 정원 손상 주의' },
+    ],
+  },
+
+  5: {
+    name: '미니멀 모던 스튜디오',
+    sub: '서울 성동구 성수 · 스튜디오 · 최대 2인',
+    img: 'rooms/room2.jpg',
+    price: 142000, rating: 4.85, reviews: 167,
+    superhost: false, capacity: '최대 2인', type: '스튜디오',
+    keywords: ['감성 숙소', '도시 숙소', '교통 편리', '포토스팟', '트렌디', '성수동'],
+    amenities: [
+      { icon: '📶', label: '와이파이' }, { icon: '🍳', label: '미니 주방' },
+      { icon: '❄️', label: '에어컨' },  { icon: '🔥', label: '난방' },
+      { icon: '📺', label: '스마트 TV' },{ icon: '☕', label: '커피머신' },
+      { icon: '🔑', label: '스마트 잠금' },{ icon: '💈', label: '드라이어' },
+    ],
+    fullDesc: `성수동 핫플레이스 한가운데, 군더더기 없이 깔끔한 모던 스튜디오입니다. 서울의 감성을 가장 가까이에서 느껴보세요.\n\n화이트 & 우드톤으로 꾸며진 스튜디오는 사진 찍기에도, 머물기에도 최적화된 공간입니다. 주변에는 성수동 카페 거리·서울숲·갤러리·팝업스토어들이 즐비해 볼거리가 넘쳐요.\n\n성수역에서 도보 5분 거리로 뚝섬·건대·홍대·강남 모두 지하철로 30분 이내 접근 가능합니다.`,
+    host: { name: '지호', avatar: '지', color: '#F8DFA0', stays: 4, years: 2, superhost: false, respRate: 96, respTime: '1시간 이내' },
+    address: '서울특별시 성동구 성수동 일대',
+    locationSub: '성수역 3번 출구 도보 5분 · 서울숲 도보 15분',
+    reviewList: [
+      { name: '아린', avatar: '아', color: '#FDECC8', date: '2025년 4월', stars: 5,
+        text: '성수동 카페 투어 목적으로 왔는데 숙소 자체가 이미 작품이에요. 체크아웃하기 싫을 정도로 아늑했어요. 사진도 정말 잘 나옵니다.' },
+      { name: '현우', avatar: '현', color: '#F9E0B0', date: '2025년 3월', stars: 4,
+        text: '인테리어 진짜 예쁩니다. 사진이랑 실제가 똑같아요. 주변 맛집이 많아서 오히려 좋았고 지하철 가까워서 이동도 편했습니다.' },
+      { name: '소이', avatar: '소', color: '#FAE8C0', date: '2025년 2월', stars: 5,
+        text: '친구랑 성수 나들이로 왔는데 숙소 자체가 포토스팟이에요 ㅎㅎ 청결하고 아늑하고 호스트님 응대도 빠릿빠릿해서 편안하게 잘 수 있었어요.' },
+    ],
+    rules: [
+      { icon: '🕒', text: '체크인 15:00 이후 · 체크아웃 11:00 이전' },
+      { icon: '🚭', text: '전 구역 금연' },
+      { icon: '🐾', text: '반려동물 동반 불가' },
+      { icon: '👥', text: '최대 2인 이용' },
+      { icon: '🎉', text: '파티 및 행사 금지' },
+      { icon: '🔇', text: '밤 10시 이후 소음 주의' },
+    ],
+  },
+
+  6: {
+    name: '여의도 한강 리버뷰',
+    sub: '서울 영등포구 여의도 · 아파트 20층 · 최대 3인',
+    img: 'rooms/room5.jpg',
+    price: 215000, rating: 4.91, reviews: 94,
+    superhost: true, capacity: '최대 3인', type: '아파트',
+    keywords: ['경치가 좋음', '편안한 숙소', '도시 숙소', '교통 편리', '한강뷰', '비즈니스'],
+    amenities: [
+      { icon: '📶', label: '와이파이' },  { icon: '🍳', label: '풀옵션 주방' },
+      { icon: '❄️', label: '에어컨' },   { icon: '🔥', label: '난방' },
+      { icon: '🚗', label: '주차 1대' }, { icon: '🧺', label: '세탁/건조기' },
+      { icon: '📺', label: 'TV 65"' },   { icon: '☕', label: '커피머신' },
+      { icon: '💻', label: '업무 공간' }, { icon: '🔑', label: '스마트 잠금' },
+      { icon: '🌡', label: '온수 24h' }, { icon: '💈', label: '드라이어' },
+    ],
+    fullDesc: `여의도 한강이 통창으로 펼쳐지는 20층 아파트입니다. 서울의 파노라마 뷰와 함께 완벽한 편안함을 누리세요.\n\n낮에는 한강과 여의도 공원의 초록빛 경관이, 밤에는 불빛 가득한 서울의 야경이 통창 너머로 펼쳐집니다.\n\n65인치 스마트 TV와 전용 업무 공간이 마련되어 있어 장기 비즈니스 출장에도 최적입니다. 여의도역·국회의사당역 모두 도보 10분 이내이며 김포공항까지 지하철로 20분 거리입니다.`,
+    host: { name: '하은', avatar: '하', color: '#FBF0C0', stays: 6, years: 5, superhost: true, respRate: 99, respTime: '1시간 이내' },
+    address: '서울특별시 영등포구 여의도동 일대',
+    locationSub: '여의도역 3번 출구 도보 8분 · 한강공원 도보 5분',
+    reviewList: [
+      { name: '진우', avatar: '진', color: '#FDECC8', date: '2025년 4월', stars: 5,
+        text: '출장으로 왔는데 이 가격에 이 뷰라니 너무 만족스러워요. 한강 보면서 일하니까 스트레스가 확 풀렸어요. 다음 출장도 여기로 올 것 같습니다.' },
+      { name: '가영', avatar: '가', color: '#F9E0B0', date: '2025년 3월', stars: 5,
+        text: '친구 두 명이랑 왔어요. 야경이 정말 숨막히게 예쁩니다. 하은 호스트님이 세심하게 안내해주셔서 불편함이 하나도 없었어요.' },
+      { name: '승아', avatar: '승', color: '#FAE8C0', date: '2025년 2월', stars: 5,
+        text: '청결도, 위치, 뷰, 편의시설 모두 만점이에요. 아침에 커피 마시면서 한강 바라보는 시간이 너무 행복했어요.' },
+    ],
+    rules: [
+      { icon: '🕒', text: '체크인 15:00 이후 · 체크아웃 11:00 이전' },
+      { icon: '🚭', text: '전 구역 금연 (베란다 포함)' },
+      { icon: '🐾', text: '반려동물 동반 불가' },
+      { icon: '🎉', text: '파티 및 대규모 모임 금지' },
+      { icon: '🔇', text: '밤 11시 이후 소음 주의' },
+      { icon: '🚗', text: '주차 1대 제공 · 체크인 전 사전 예약 필수' },
+    ],
+  },
+};
+
+/* ════════════════════════════════════
+   RENDER
+════════════════════════════════════ */
+const params   = new URLSearchParams(location.search);
+const listingId = parseInt(params.get('id')) || 1;
+const d = DETAILS[listingId] || DETAILS[1];
+
+document.title = `${d.name} — Airbnb`;
+document.getElementById('heroImg').src = d.img;
+document.getElementById('heroImg').alt = d.name;
+
+// 키워드
+document.getElementById('keywordsRow').innerHTML =
+  d.keywords.map(k => `<span class="kw-tag">${k}</span>`).join('');
+
+// 기본 정보
+document.getElementById('basicInfo').innerHTML = `
+  <div class="listing-name">${d.name}</div>
+  <div class="listing-sub">${d.sub}</div>
+  <div class="meta-row">
+    <span class="meta-rating">⭐ ${d.rating}</span>
+    <span class="meta-dot">•</span>
+    <span class="meta-link">후기 ${d.reviews}개</span>
+    ${d.superhost ? '<span class="superhost-pill">🏅 슈퍼호스트</span>' : ''}
+  </div>
+`;
+
+// 편의시설
+document.getElementById('amenitiesSection').innerHTML = `
+  <div class="sec-head">
+    <span class="sec-title">편의시설</span>
+  </div>
+  <div class="amenities-grid">
+    ${d.amenities.map(a => `
+      <div class="amenity-item">
+        <div class="amenity-icon">${a.icon}</div>
+        <div class="amenity-label">${a.label}</div>
+      </div>`).join('')}
+  </div>
+`;
+
+// 숙소 소개
+document.getElementById('descSection').innerHTML = `
+  <div class="sec-head"><span class="sec-title">숙소 소개</span></div>
+  <div class="desc-wrapper">
+    <div class="desc-text collapsed" id="descText">${d.fullDesc.replace(/\n/g,'<br>')}</div>
+    <div class="desc-fade" id="descFade"></div>
+  </div>
+  <button class="desc-btn" id="descBtn" onclick="toggleDesc()">
+    <span id="descLabel">자세히 보기</span>
+    <span class="desc-arrow" id="descArrow">▼</span>
+  </button>
+`;
+
+// 호스트
+document.getElementById('hostSection').innerHTML = `
+  <div class="sec-head"><span class="sec-title">호스트</span></div>
+  <div class="host-row">
+    <div class="host-avatar" style="background:${d.host.color}">${d.host.avatar}</div>
+    <div class="host-info">
+      <div class="host-name">${d.host.name}님${d.host.superhost ? ' 🏅' : ''}</div>
+      <div class="host-meta">숙소 ${d.host.stays}개 · 호스팅 ${d.host.years}년차<br>응답률 ${d.host.respRate}% · ${d.host.respTime}</div>
+    </div>
+    <button class="host-msg-btn" onclick="location.href='messages.html'">메시지</button>
+  </div>
+`;
+
+// 위치
+document.getElementById('locationSection').innerHTML = `
+  <div class="sec-head"><span class="sec-title">위치</span></div>
+  <div class="location-box">
+    <div class="location-addr">📍 ${d.address}</div>
+    <div class="location-sub">${d.locationSub}</div>
+    <div class="map-link-btn" onclick="location.href='map.html'">🗺️ 지도에서 보기 →</div>
+  </div>
+`;
+
+// 후기
+document.getElementById('reviewsSection').innerHTML = `
+  <div class="sec-head"><span class="sec-title">후기</span></div>
+  <div class="reviews-top">
+    <div class="score-big">${d.rating}</div>
+    <div class="score-side">
+      <div class="score-stars">${'⭐'.repeat(Math.round(d.rating))}</div>
+      <div class="score-count">후기 ${d.reviews}개</div>
+    </div>
+  </div>
+  ${d.reviewList.map(r => `
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar" style="background:${r.color}">${r.avatar}</div>
+        <div class="review-who">
+          <div class="review-name">${r.name}</div>
+          <div class="review-date">${r.date}</div>
+        </div>
+        <div class="review-stars">${'⭐'.repeat(r.stars)}</div>
+      </div>
+      <div class="review-body">${r.text}</div>
+    </div>`).join('')}
+`;
+
+// 이용 규칙
+document.getElementById('rulesSection').innerHTML = `
+  <div class="sec-head"><span class="sec-title">이용 규칙</span></div>
+  <div class="rules-list">
+    ${d.rules.map(r => `
+      <div class="rule-row">
+        <span class="rule-icon">${r.icon}</span>
+        <span class="rule-text">${r.text}</span>
+      </div>`).join('')}
+  </div>
+`;
+
+// 하단 바
+document.getElementById('bottomBar').innerHTML = `
+  <div>
+    <div class="bar-price">₩${d.price.toLocaleString()} <span>/ 박</span></div>
+    <div class="bar-sub">⭐ ${d.rating} · 후기 ${d.reviews}개</div>
+  </div>
+  <button class="book-btn" onclick="location.href='booking.html?id=${listingId}'">예약하기</button>
+`;
+
+/* ── 헤더 스크롤 ── */
+const HERO_H = Math.max(window.innerHeight * 0.42, 260);
+window.addEventListener('scroll', () => {
+  document.getElementById('detailHeader')
+    .classList.toggle('scrolled', window.scrollY > HERO_H - 60);
+}, { passive: true });
+
+/* ── 설명 토글 ── */
+let descOpen = false;
+function toggleDesc() {
+  descOpen = !descOpen;
+  document.getElementById('descText').className = 'desc-text ' + (descOpen ? 'expanded' : 'collapsed');
+  document.getElementById('descFade').className = 'desc-fade' + (descOpen ? ' gone' : '');
+  document.getElementById('descLabel').textContent = descOpen ? '접기' : '자세히 보기';
+  document.getElementById('descArrow').style.transform = descOpen ? 'rotate(180deg)' : '';
+  document.getElementById('descBtn').classList.toggle('open', descOpen);
+}
+
+/* ── 위시리스트 ── */
+let wished = WishlistManager.has(listingId);
+function syncWish() {
+  document.getElementById('wishBtn').textContent = wished ? '❤️' : '🤍';
+}
+function toggleWish() {
+  wished = WishlistManager.toggle(listingId);
+  syncWish();
+}
+syncWish();
+</script>
+</body>
+</html>

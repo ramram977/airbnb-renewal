@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>마이페이지 — Airbnb</title>
+  <script src="common.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── THEME VARIABLES ── */
+    :root {
+      --primary:     #E8A020;
+      --primary-bg:  #FEF9EE;
+      --bg:          #FEFCF7;
+      --surface:     #FFFFFF;
+      --surface2:    #FDFAF3;
+      --border:      #F0E8D8;
+      --dark:        #2A2A2A;
+      --mid:         #9A9A9A;
+      --light-text:  #B8B8B8;
+      --red:         #FF385C;
+      --danger:      #E53935;
+      --card-bg:     #FFF8E8;
+      --card-border: #EEE0C0;
+      --section-lbl: #B89050;
+      --chevron:     #D0C0A0;
+      --toggle-off:  #E0D8C8;
+      --toggle-on:   #E8A020;
+      --shadow:      rgba(180,140,60,0.08);
+    }
+
+    [data-theme="dark"] {
+      --primary:     #F0B030;
+      --primary-bg:  #2C2510;
+      --bg:          #141414;
+      --surface:     #1E1E1E;
+      --surface2:    #242424;
+      --border:      #333333;
+      --dark:        #F0F0F0;
+      --mid:         #888888;
+      --light-text:  #555555;
+      --card-bg:     #252015;
+      --card-border: #3A3020;
+      --section-lbl: #A08840;
+      --chevron:     #555555;
+      --toggle-off:  #404040;
+      --shadow:      rgba(0,0,0,0.3);
+    }
+
+    body {
+      font-family: -apple-system, 'Pretendard', 'SF Pro Display', sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      max-width: 390px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    /* ── SCROLL CONTENT ── */
+    .page-content {
+      padding-bottom: 90px;
+    }
+
+    /* ── PROFILE CARD ── */
+    .profile-card {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--card-border);
+      padding: 56px 20px 22px;
+      position: relative;
+    }
+
+    .profile-card-inner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .profile-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .profile-avatar {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: #F8DFA0;
+      border: 3px solid var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 700;
+      color: #A06000;
+      overflow: hidden;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .profile-avatar:active { opacity: 0.8; }
+
+    .avatar-cam-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .profile-info { flex: 1; min-width: 0; }
+
+    .profile-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 3px;
+    }
+
+    .profile-email {
+      font-size: 13px;
+      color: var(--mid);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .profile-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .badge-verified {
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    [data-theme="dark"] .badge-verified {
+      background: #1A3020;
+      color: #66BB6A;
+    }
+
+    .badge-host {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+
+    .profile-stats {
+      display: flex;
+      margin-top: 18px;
+      border-top: 1px solid var(--card-border);
+      padding-top: 16px;
+      gap: 0;
+    }
+
+    .stat-item {
+      flex: 1;
+      text-align: center;
+    }
+
+    .stat-item + .stat-item {
+      border-left: 1px solid var(--card-border);
+    }
+
+    .stat-num {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .stat-lbl {
+      font-size: 11px;
+      color: var(--mid);
+      margin-top: 2px;
+    }
+
+    .edit-profile-btn {
+      position: absolute;
+      top: 56px;
+      right: 20px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--card-border);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--dark);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .edit-profile-btn:active { background: var(--primary-bg); }
+
+    /* ── SECTION ── */
+    .section {
+      margin-top: 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--section-lbl);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      padding: 14px 20px 8px;
+    }
+
+    /* ── MENU ITEM ── */
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      cursor: pointer;
+      transition: background 0.1s;
+      position: relative;
+    }
+    .menu-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 54px;
+      right: 0;
+      height: 1px;
+      background: var(--border);
+    }
+    .menu-item:active { background: var(--surface2); }
+
+    .menu-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .menu-icon.red-icon  { background: #FFF0F0; }
+    .menu-icon.gray-icon { background: var(--surface2); }
+
+    [data-theme="dark"] .menu-icon.red-icon  { background: #2A1515; }
+    [data-theme="dark"] .menu-icon.gray-icon { background: #2A2A2A; }
+
+    .menu-text { flex: 1; min-width: 0; }
+    .menu-title { font-size: 15px; font-weight: 600; color: var(--dark); }
+    .menu-desc  { font-size: 12px; color: var(--mid); margin-top: 1px; }
+
+    .menu-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .menu-value {
+      font-size: 13px;
+      color: var(--mid);
+    }
+
+    .menu-chevron {
+      font-size: 18px;
+      color: var(--chevron);
+      line-height: 1;
+    }
+
+    .menu-badge {
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+    }
+
+    /* Toggle switch */
+    .toggle-wrap {
+      position: relative;
+      width: 44px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .toggle-wrap input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 13px;
+      background: var(--toggle-off);
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .toggle-wrap input:checked + .toggle-track {
+      background: var(--toggle-on);
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.2s;
+      pointer-events: none;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+
+    .toggle-wrap input:checked ~ .toggle-thumb {
+      transform: translateX(18px);
+    }
+
+    /* ── LOGOUT / DANGER ── */
+    .menu-item.logout .menu-title { color: var(--primary); }
+    .menu-item.danger .menu-title { color: var(--danger); }
+
+    /* ── APP VERSION ── */
+    .app-version {
+      text-align: center;
+      padding: 24px 20px 8px;
+      font-size: 12px;
+      color: var(--light-text);
+    }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 390px;
+      height: 72px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 200;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+    .nav-icon  { font-size: 22px; }
+    .nav-label { font-size: 10px; font-weight: 600; color: var(--mid); }
+    .nav-item.active .nav-icon,
+    .nav-item.active .nav-label { color: var(--red); }
+
+    .nav-item.map-hl .nav-icon-pill {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--dark);
+      border-radius: 20px;
+      padding: 5px 12px;
+      transition: background 0.25s;
+    }
+    .nav-item.map-hl .nav-icon-pill .nav-icon { font-size: 17px; color: #fff; }
+    .nav-item.map-hl .nav-icon-pill .pill-lbl { color: #fff; font-size: 12px; font-weight: 700; }
+    .nav-item.map-hl > .nav-label { color: var(--red); font-weight: 700; margin-top: 2px; }
+
+    /* ══════════════════════════════════
+       MODALS (slide-up sheet)
+    ══════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      max-width: 390px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
+      width: 100%;
+      max-width: 390px;
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      z-index: 600;
+      transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+      max-height: 88dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-sheet.open {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      margin: 12px auto 0;
+      flex-shrink: 0;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--mid);
+    }
+
+    .modal-body {
+      overflow-y: auto;
+      flex: 1;
+      padding: 16px 20px 32px;
+    }
+
+    /* ── FORM ELEMENTS ── */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--mid);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 7px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--dark);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--primary); }
+
+    .form-textarea {
+      resize: none;
+      height: 80px;
+      line-height: 1.5;
+    }
+
+    .form-save-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.15s;
+    }
+    .form-save-btn:active { background: #D09010; }
+
+    /* ── BOOKING HISTORY ── */
+    .booking-card {
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      background: var(--surface);
+    }
+
+    .booking-card-img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+
+    .booking-card-body {
+      padding: 14px;
+    }
+
+    .booking-card-status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .status-upcoming { background: #E8F5E9; color: #2E7D32; }
+    .status-completed { background: var(--primary-bg); color: #A06000; }
+    .status-cancelled { background: #FFEBEE; color: #C62828; }
+
+    [data-theme="dark"] .status-upcoming  { background: #1A3020; color: #66BB6A; }
+    [data-theme="dark"] .status-completed { background: #2A2010; color: #F0B030; }
+    [data-theme="dark"] .status-cancelled { background: #2A1018; color: #EF5350; }
+
+    .booking-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .booking-card-meta {
+      font-size: 13px;
+      color: var(--mid);
+      margin-bottom: 4px;
+    }
+
+    .booking-card-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-top: 8px;
+    }
+
+    .booking-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .card-btn {
+      flex: 1;
+      padding: 9px 0;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dark);
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .card-btn:active { background: var(--surface2); }
+    .card-btn.primary-btn {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .card-btn.primary-btn:active { background: #D09010; }
+
+    /* ── REVIEW CARD ── */
+    .review-card {
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: var(--surface);
+    }
+
+    .review-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .review-place-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .review-date {
+      font-size: 12px;
+      color: var(--mid);
+      margin-top: 2px;
+    }
+
+    .review-stars {
+      font-size: 13px;
+      flex-shrink: 0;
+      letter-spacing: 1px;
+    }
+
+    .review-text {
+      font-size: 14px;
+      color: var(--dark);
+      line-height: 1.55;
+    }
+
+    /* ── FONT SIZE OPTIONS ── */
+    .font-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .font-option:last-child { border-bottom: none; }
+
+    .font-option-label { font-size: 15px; color: var(--dark); font-weight: 500; }
+    .font-option-sample { font-size: 13px; color: var(--mid); }
+    .font-check { font-size: 18px; color: var(--primary); }
+
+    /* ── NOTIFICATION ROWS ── */
+    .notif-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .notif-row:last-child { border-bottom: none; }
+    .notif-row-text { flex: 1; }
+    .notif-row-title { font-size: 15px; font-weight: 600; color: var(--dark); }
+    .notif-row-desc  { font-size: 12px; color: var(--mid); margin-top: 2px; }
+
+    /* ── SECURITY ITEMS ── */
+    .security-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .security-item:last-child { border-bottom: none; }
+    .security-item-title { font-size: 15px; font-weight: 600; color: var(--dark); }
+    .security-item-value { font-size: 13px; color: var(--mid); }
+    .security-item-chevron { color: var(--chevron); font-size: 18px; margin-left: 6px; }
+
+    /* ── COUPON / POINT ── */
+    .coupon-card {
+      background: var(--card-bg);
+      border: 1.5px dashed var(--card-border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .coupon-icon { font-size: 28px; flex-shrink: 0; }
+    .coupon-title { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 3px; }
+    .coupon-expire { font-size: 12px; color: var(--mid); }
+    .coupon-value { font-size: 18px; font-weight: 700; color: var(--primary); margin-left: auto; flex-shrink: 0; }
+
+    .point-summary {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .point-lbl { font-size: 13px; color: var(--mid); margin-bottom: 6px; }
+    .point-val { font-size: 32px; font-weight: 700; color: var(--primary); }
+    .point-sub { font-size: 12px; color: var(--mid); margin-top: 4px; }
+
+    /* ── PAYMENT CARD ── */
+    .payment-card {
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface);
+    }
+    .payment-icon { font-size: 28px; flex-shrink: 0; }
+    .payment-name { font-size: 15px; font-weight: 700; color: var(--dark); }
+    .payment-number { font-size: 13px; color: var(--mid); margin-top: 2px; }
+    .payment-default { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-bg); padding: 2px 8px; border-radius: 8px; margin-left: auto; }
+
+    .add-payment-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1.5px dashed var(--border);
+      background: transparent;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--mid);
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* ── TERMS ── */
+    .terms-item {
+      padding: 15px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .terms-item:last-child { border-bottom: none; }
+    .terms-item-title { font-size: 15px; font-weight: 600; color: var(--dark); }
+
+    /* ── WISHLIST ── */
+    .wish-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .wish-card {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+    }
+    .wish-card-img {
+      width: 100%;
+      height: 100px;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      position: relative;
+    }
+    .wish-heart {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 18px;
+    }
+    .wish-card-info { padding: 10px; }
+    .wish-card-name { font-size: 13px; font-weight: 700; color: var(--dark); }
+    .wish-card-price { font-size: 12px; color: var(--mid); margin-top: 2px; }
+
+    /* ── DANGER CONFIRM ── */
+    .danger-confirm-text {
+      font-size: 14px;
+      color: var(--mid);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .danger-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      background: #FFEBEE;
+      color: var(--danger);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    [data-theme="dark"] .danger-btn { background: #2A1015; }
+    .cancel-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--mid);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="page-content">
+
+  <!-- ── PROFILE CARD ── -->
+  <div class="profile-card">
+    <button class="edit-profile-btn" onclick="openModal('editProfile')">편집</button>
+    <div class="profile-card-inner">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" onclick="openModal('editProfile')">김</div>
+        <div class="avatar-cam-btn" onclick="openModal('editProfile')">📷</div>
+      </div>
+      <div class="profile-info">
+        <div class="profile-name">김지우</div>
+        <div class="profile-email">jiwoo.kim@email.com</div>
+        <div class="profile-badges">
+          <span class="badge badge-verified">✓ 인증됨</span>
+          <span class="badge badge-host">⭐ 슈퍼호스트</span>
+        </div>
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="stat-item">
+        <div class="stat-num">12</div>
+        <div class="stat-lbl">예약</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">8</div>
+        <div class="stat-lbl">리뷰</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3</div>
+        <div class="stat-lbl">가입년차</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">❤️ 5</div>
+        <div class="stat-lbl">위시리스트</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 나의 활동 ── -->
+  <div class="section">
+    <div class="section-label">나의 활동</div>
+
+    <div class="menu-item" onclick="openModal('bookings')">
+      <div class="menu-icon">📅</div>
+      <div class="menu-text">
+        <div class="menu-title">예약 내역</div>
+        <div class="menu-desc">예정·완료·취소된 예약</div>
+      </div>
+      <div class="menu-right">
+        <span class="menu-badge">2</span>
+        <span class="menu-chevron">›</span>
+      </div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('wishlist')">
+      <div class="menu-icon">❤️</div>
+      <div class="menu-text">
+        <div class="menu-title">위시리스트</div>
+        <div class="menu-desc">저장한 숙소</div>
+      </div>
+      <div class="menu-right">
+        <span class="menu-value">5</span>
+        <span class="menu-chevron">›</span>
+      </div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('reviews')">
+      <div class="menu-icon">⭐</div>
+      <div class="menu-text">
+        <div class="menu-title">내가 쓴 리뷰</div>
+        <div class="menu-desc">작성한 숙소 후기</div>
+      </div>
+      <div class="menu-right">
+        <span class="menu-value">8개</span>
+        <span class="menu-chevron">›</span>
+      </div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('coupons')">
+      <div class="menu-icon">🎫</div>
+      <div class="menu-text">
+        <div class="menu-title">쿠폰 · 포인트</div>
+        <div class="menu-desc">사용 가능한 혜택 3개</div>
+      </div>
+      <div class="menu-right">
+        <span class="menu-badge">3</span>
+        <span class="menu-chevron">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 계정 관리 ── -->
+  <div class="section">
+    <div class="section-label">계정 관리</div>
+
+    <div class="menu-item" onclick="openModal('editProfile')">
+      <div class="menu-icon">✏️</div>
+      <div class="menu-text">
+        <div class="menu-title">프로필 편집</div>
+        <div class="menu-desc">이름, 소개, 사진 변경</div>
+      </div>
+      <div class="menu-right"><span class="menu-chevron">›</span></div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('payment')">
+      <div class="menu-icon">💳</div>
+      <div class="menu-text">
+        <div class="menu-title">결제 수단</div>
+        <div class="menu-desc">카드 및 계좌 관리</div>
+      </div>
+      <div class="menu-right"><span class="menu-chevron">›</span></div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('security')">
+      <div class="menu-icon">🔒</div>
+      <div class="menu-text">
+        <div class="menu-title">보안 설정</div>
+        <div class="menu-desc">비밀번호, 2단계 인증</div>
+      </div>
+      <div class="menu-right"><span class="menu-chevron">›</span></div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('hostSignup')">
+      <div class="menu-icon">🏠</div>
+      <div class="menu-text">
+        <div class="menu-title">호스트 되기</div>
+        <div class="menu-desc">내 공간을 등록하고 수익 내기</div>
+      </div>
+      <div class="menu-right"><span class="menu-chevron">›</span></div>
+    </div>
+  </div>
+
+  <!-- ── 앱 설정 ── -->
+  <div class="section">
+    <div class="section-label">앱 설정</div>
+
+    <div class="menu-item" style="cursor:default">
+      <div class="menu-icon gray-icon">🌙</div>
+      <div class="menu-text">
+        <div class="menu-title">다크 모드</div>
+      </div>
+      <div class="menu-right">
+        <label class="toggle-wrap">
+          <input type="checkbox" id="darkToggle" onchange="toggleDark(this)">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('fontSize')">
+      <div class="menu-icon gray-icon">🔤</div>
+      <div class="menu-text">
+        <div class="menu-title">글씨 크기</div>
+      </div>
+      <div class="menu-right">
+        <span class="menu-value" id="fontSizeLabel">보통</span>
+        <span class="menu-chevron">›</span>
+      </div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('notifications')">
+      <div class="menu-icon gray-icon">🔔</div>
+      <div class="menu-text">
+        <div class="menu-title">알림 설정</div>
+      </div>
+      <div class="menu-right"><span class="menu-chevron">›</span></div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('language')">
+      <div class="menu-icon gray-icon">🌍</div>
+      <div class="menu-text">
+        <div class="menu-title">언어</div>
+      </div>
+      <div class="menu-right">
+        <span class="menu-value">한국어</span>
+        <span class="menu-chevron">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 고객 지원 ── -->
+  <div class="section">
+    <div class="section-label">고객 지원</div>
+
+    <div class="menu-item" onclick="openModal('support')">
+      <div class="menu-icon gray-icon">🎧</div>
+      <div class="menu-text"><div class="menu-title">고객센터</div></div>
+      <div class="menu-right"><span class="menu-chevron">›</span></div>
+    </div>
+
+    <div class="menu-item" onclick="openModal('terms')">
+      <div class="menu-icon gray-icon">📄</div>
+      <div class="menu-text"><div class="menu-title">이용약관 및 정책</div></div>
+      <div class="menu-right"><span class="menu-chevron">›</span></div>
+    </div>
+  </div>
+
+  <!-- ── 계정 ── -->
+  <div class="section">
+    <div class="section-label">계정</div>
+
+    <div class="menu-item logout" onclick="openModal('logout')">
+      <div class="menu-icon" style="background:var(--primary-bg)">🚪</div>
+      <div class="menu-text"><div class="menu-title">로그아웃</div></div>
+    </div>
+
+    <div class="menu-item danger" onclick="openModal('deleteAccount')">
+      <div class="menu-icon red-icon">⚠️</div>
+      <div class="menu-text"><div class="menu-title">회원 탈퇴</div></div>
+    </div>
+  </div>
+
+  <div class="app-version">Airbnb Renewal v1.0.0</div>
+
+</div><!-- /page-content -->
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+  <div class="nav-item" onclick="location.href='search.html'">
+    <div class="nav-icon">🔍</div>
+    <div class="nav-label">검색</div>
+  </div>
+  <div class="nav-item" onclick="location.href='index.html'">
+    <div class="nav-icon">✈️</div>
+    <div class="nav-label">여행</div>
+  </div>
+  <div class="nav-item map-hl" onclick="location.href='map.html'">
+    <div class="nav-icon-pill">
+      <span class="nav-icon">🗺️</span>
+      <span class="pill-lbl">지도</span>
+    </div>
+    <div class="nav-label">지도</div>
+  </div>
+  <div class="nav-item" onclick="location.href='messages.html'">
+    <div class="nav-icon">💬</div>
+    <div class="nav-label">메시지</div>
+  </div>
+  <div class="nav-item active">
+    <div class="nav-icon">👤</div>
+    <div class="nav-label">프로필</div>
+  </div>
+</nav>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 프로필 편집
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-editProfile" onclick="closeModal('editProfile')"></div>
+<div class="modal-sheet" id="sh-editProfile">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">프로필 편집</span>
+    <button class="modal-close" onclick="closeModal('editProfile')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label class="form-label">이름</label>
+      <input class="form-input" type="text" value="김지우" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">이메일</label>
+      <input class="form-input" type="email" value="jiwoo.kim@email.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">전화번호</label>
+      <input class="form-input" type="tel" value="010-1234-5678" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">자기소개</label>
+      <textarea class="form-input form-textarea" placeholder="간단한 자기소개를 작성해 주세요.">여행을 사랑하는 사람입니다 ✈️</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">거주 도시</label>
+      <input class="form-input" type="text" value="서울, 대한민국" />
+    </div>
+    <button class="form-save-btn" onclick="closeModal('editProfile')">저장</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 예약 내역
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-bookings" onclick="closeModal('bookings')"></div>
+<div class="modal-sheet" id="sh-bookings">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">예약 내역</span>
+    <button class="modal-close" onclick="closeModal('bookings')">✕</button>
+  </div>
+  <div class="modal-body">
+
+    <div class="booking-card">
+      <div class="booking-card-img">🏯</div>
+      <div class="booking-card-body">
+        <span class="booking-card-status status-upcoming">예정</span>
+        <div class="booking-card-title">감성 한옥 스테이</div>
+        <div class="booking-card-meta">서울 · 5월 10일 – 13일 · 2박</div>
+        <div class="booking-card-meta">호스트: 지은</div>
+        <div class="booking-card-price">₩ 258,000</div>
+        <div class="booking-card-actions">
+          <button class="card-btn">예약 취소</button>
+          <button class="card-btn primary-btn">메시지</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="booking-card">
+      <div class="booking-card-img">🌊</div>
+      <div class="booking-card-body">
+        <span class="booking-card-status status-upcoming">예정</span>
+        <div class="booking-card-title">오션뷰 모던 아파트</div>
+        <div class="booking-card-meta">부산 · 6월 1일 – 3일 · 2박</div>
+        <div class="booking-card-meta">호스트: 민준</div>
+        <div class="booking-card-price">₩ 190,000</div>
+        <div class="booking-card-actions">
+          <button class="card-btn">예약 취소</button>
+          <button class="card-btn primary-btn">메시지</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="booking-card">
+      <div class="booking-card-img">🌲</div>
+      <div class="booking-card-body">
+        <span class="booking-card-status status-completed">완료</span>
+        <div class="booking-card-title">숲속 통나무 카빈</div>
+        <div class="booking-card-meta">가평 · 4월 25일 – 27일 · 2박</div>
+        <div class="booking-card-meta">호스트: 하준</div>
+        <div class="booking-card-price">₩ 220,000</div>
+        <div class="booking-card-actions">
+          <button class="card-btn">리뷰 작성</button>
+          <button class="card-btn primary-btn">재예약</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="booking-card">
+      <div class="booking-card-img">🌅</div>
+      <div class="booking-card-body">
+        <span class="booking-card-status status-cancelled">취소됨</span>
+        <div class="booking-card-title">제주 오션프론트 빌라</div>
+        <div class="booking-card-meta">제주 · 3월 14일 – 17일 · 3박</div>
+        <div class="booking-card-meta">호스트: 수진</div>
+        <div class="booking-card-price">₩ 360,000 (환불 완료)</div>
+        <div class="booking-card-actions">
+          <button class="card-btn primary-btn">다시 검색</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 위시리스트
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-wishlist" onclick="closeModal('wishlist')"></div>
+<div class="modal-sheet" id="sh-wishlist">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">위시리스트</span>
+    <button class="modal-close" onclick="closeModal('wishlist')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="wish-grid">
+      <div class="wish-card">
+        <div class="wish-card-img">🏖️<span class="wish-heart">❤️</span></div>
+        <div class="wish-card-info">
+          <div class="wish-card-name">제주 해변 풀빌라</div>
+          <div class="wish-card-price">₩ 350,000 / 박</div>
+        </div>
+      </div>
+      <div class="wish-card">
+        <div class="wish-card-img">🏔️<span class="wish-heart">❤️</span></div>
+        <div class="wish-card-info">
+          <div class="wish-card-name">강원 산속 글램핑</div>
+          <div class="wish-card-price">₩ 185,000 / 박</div>
+        </div>
+      </div>
+      <div class="wish-card">
+        <div class="wish-card-img">🏯<span class="wish-heart">❤️</span></div>
+        <div class="wish-card-info">
+          <div class="wish-card-name">전주 한옥마을</div>
+          <div class="wish-card-price">₩ 120,000 / 박</div>
+        </div>
+      </div>
+      <div class="wish-card">
+        <div class="wish-card-img">🌊<span class="wish-heart">❤️</span></div>
+        <div class="wish-card-info">
+          <div class="wish-card-name">속초 오션뷰 스위트</div>
+          <div class="wish-card-price">₩ 210,000 / 박</div>
+        </div>
+      </div>
+      <div class="wish-card">
+        <div class="wish-card-img">🌿<span class="wish-heart">❤️</span></div>
+        <div class="wish-card-info">
+          <div class="wish-card-name">남해 허브 농장 스테이</div>
+          <div class="wish-card-price">₩ 145,000 / 박</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 내가 쓴 리뷰
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-reviews" onclick="closeModal('reviews')"></div>
+<div class="modal-sheet" id="sh-reviews">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">내가 쓴 리뷰</span>
+    <button class="modal-close" onclick="closeModal('reviews')">✕</button>
+  </div>
+  <div class="modal-body">
+
+    <div class="review-card">
+      <div class="review-card-top">
+        <div>
+          <div class="review-place-name">감성 한옥 스테이 · 서울</div>
+          <div class="review-date">2025년 3월</div>
+        </div>
+        <div class="review-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+      <div class="review-text">숙소가 정말 예쁘고 깨끗했어요. 호스트분도 친절하게 안내해주셨고, 한옥의 분위기를 제대로 느낄 수 있었습니다. 다음에도 꼭 다시 오고 싶네요!</div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-card-top">
+        <div>
+          <div class="review-place-name">숲속 통나무 카빈 · 가평</div>
+          <div class="review-date">2025년 2월</div>
+        </div>
+        <div class="review-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+      <div class="review-text">자연 속에서 힐링할 수 있는 완벽한 장소입니다. 바베큐 시설도 잘 갖춰져 있고 근처 닭갈비 맛집 추천도 감사했어요 🌲</div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-card-top">
+        <div>
+          <div class="review-place-name">오션뷰 스튜디오 · 강릉</div>
+          <div class="review-date">2024년 12월</div>
+        </div>
+        <div class="review-stars">⭐⭐⭐⭐</div>
+      </div>
+      <div class="review-text">뷰가 정말 환상적이에요. 파도 소리 들으며 잠드는 경험이 최고였습니다. 주차가 조금 불편한 점이 아쉬웠지만 전반적으로 만족스러웠어요.</div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-card-top">
+        <div>
+          <div class="review-place-name">미니멀 모던 스튜디오 · 서울</div>
+          <div class="review-date">2024년 11월</div>
+        </div>
+        <div class="review-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+      <div class="review-text">위치가 정말 좋고 인테리어도 감각적이에요. 출장 중에 편하게 쉴 수 있었습니다. 다음 서울 방문 때도 이용할게요!</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 쿠폰 · 포인트
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-coupons" onclick="closeModal('coupons')"></div>
+<div class="modal-sheet" id="sh-coupons">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">쿠폰 · 포인트</span>
+    <button class="modal-close" onclick="closeModal('coupons')">✕</button>
+  </div>
+  <div class="modal-body">
+
+    <div class="point-summary">
+      <div class="point-lbl">보유 포인트</div>
+      <div class="point-val">3,200P</div>
+      <div class="point-sub">1P = 1원 · 유효기간 2025.12.31</div>
+    </div>
+
+    <div class="coupon-card">
+      <div class="coupon-icon">🎁</div>
+      <div>
+        <div class="coupon-title">신규 예약 할인</div>
+        <div class="coupon-expire">~2025년 6월 30일</div>
+      </div>
+      <div class="coupon-value">15%</div>
+    </div>
+
+    <div class="coupon-card">
+      <div class="coupon-icon">🎟️</div>
+      <div>
+        <div class="coupon-title">여름 시즌 특별 쿠폰</div>
+        <div class="coupon-expire">~2025년 8월 31일</div>
+      </div>
+      <div class="coupon-value">₩5,000</div>
+    </div>
+
+    <div class="coupon-card">
+      <div class="coupon-icon">⭐</div>
+      <div>
+        <div class="coupon-title">리뷰 작성 보상</div>
+        <div class="coupon-expire">~2025년 7월 15일</div>
+      </div>
+      <div class="coupon-value">₩2,000</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 결제 수단
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-payment" onclick="closeModal('payment')"></div>
+<div class="modal-sheet" id="sh-payment">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">결제 수단</span>
+    <button class="modal-close" onclick="closeModal('payment')">✕</button>
+  </div>
+  <div class="modal-body">
+
+    <div class="payment-card">
+      <div class="payment-icon">💳</div>
+      <div>
+        <div class="payment-name">신한카드</div>
+        <div class="payment-number">•••• •••• •••• 4521</div>
+      </div>
+      <div class="payment-default">기본</div>
+    </div>
+
+    <div class="payment-card">
+      <div class="payment-icon">🏦</div>
+      <div>
+        <div class="payment-name">카카오페이</div>
+        <div class="payment-number">jiwoo.kim@kakao</div>
+      </div>
+    </div>
+
+    <div class="payment-card">
+      <div class="payment-icon">💳</div>
+      <div>
+        <div class="payment-name">국민카드</div>
+        <div class="payment-number">•••• •••• •••• 8803</div>
+      </div>
+    </div>
+
+    <button class="add-payment-btn">＋ 결제 수단 추가</button>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 보안 설정
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-security" onclick="closeModal('security')"></div>
+<div class="modal-sheet" id="sh-security">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">보안 설정</span>
+    <button class="modal-close" onclick="closeModal('security')">✕</button>
+  </div>
+  <div class="modal-body">
+
+    <div class="security-item">
+      <div>
+        <div class="security-item-title">비밀번호 변경</div>
+        <div style="font-size:12px;color:var(--mid);margin-top:2px">마지막 변경: 90일 전</div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <span class="security-item-value">변경</span>
+        <span class="security-item-chevron">›</span>
+      </div>
+    </div>
+
+    <div class="security-item" style="cursor:default">
+      <div>
+        <div class="security-item-title">2단계 인증 (2FA)</div>
+        <div style="font-size:12px;color:var(--mid);margin-top:2px">문자 메시지로 인증</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" checked onchange="">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+
+    <div class="security-item" style="cursor:default">
+      <div>
+        <div class="security-item-title">생체 인증 로그인</div>
+        <div style="font-size:12px;color:var(--mid);margin-top:2px">Face ID / 지문</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" onchange="">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+
+    <div class="security-item">
+      <div>
+        <div class="security-item-title">로그인 기기 관리</div>
+        <div style="font-size:12px;color:var(--mid);margin-top:2px">현재 2개 기기</div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <span class="security-item-chevron">›</span>
+      </div>
+    </div>
+
+    <div class="security-item">
+      <div>
+        <div class="security-item-title">신원 인증</div>
+        <div style="font-size:12px;color:#2E7D32;margin-top:2px">✓ 인증 완료</div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <span class="security-item-chevron">›</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 글씨 크기
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-fontSize" onclick="closeModal('fontSize')"></div>
+<div class="modal-sheet" id="sh-fontSize">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">글씨 크기</span>
+    <button class="modal-close" onclick="closeModal('fontSize')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="font-option" onclick="setFontSize('small','작게')">
+      <div>
+        <div class="font-option-label" style="font-size:13px">작게</div>
+        <div class="font-option-sample">숙소 미리보기 텍스트</div>
+      </div>
+      <span class="font-check" id="fc-small"></span>
+    </div>
+    <div class="font-option" onclick="setFontSize('medium','보통')">
+      <div>
+        <div class="font-option-label" style="font-size:15px">보통</div>
+        <div class="font-option-sample">숙소 미리보기 텍스트</div>
+      </div>
+      <span class="font-check" id="fc-medium">✓</span>
+    </div>
+    <div class="font-option" onclick="setFontSize('large','크게')">
+      <div>
+        <div class="font-option-label" style="font-size:17px">크게</div>
+        <div class="font-option-sample">숙소 미리보기 텍스트</div>
+      </div>
+      <span class="font-check" id="fc-large"></span>
+    </div>
+    <div class="font-option" onclick="setFontSize('xlarge','매우 크게')">
+      <div>
+        <div class="font-option-label" style="font-size:19px">매우 크게</div>
+        <div class="font-option-sample">숙소 미리보기 텍스트</div>
+      </div>
+      <span class="font-check" id="fc-xlarge"></span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 알림 설정
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-notifications" onclick="closeModal('notifications')"></div>
+<div class="modal-sheet" id="sh-notifications">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">알림 설정</span>
+    <button class="modal-close" onclick="closeModal('notifications')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="notif-row">
+      <div class="notif-row-text">
+        <div class="notif-row-title">예약 알림</div>
+        <div class="notif-row-desc">예약 확인, 변경, 취소 알림</div>
+      </div>
+      <label class="toggle-wrap"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div class="notif-row-text">
+        <div class="notif-row-title">메시지 알림</div>
+        <div class="notif-row-desc">호스트/게스트 메시지 수신</div>
+      </div>
+      <label class="toggle-wrap"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div class="notif-row-text">
+        <div class="notif-row-title">체크인 리마인더</div>
+        <div class="notif-row-desc">체크인 하루 전 알림</div>
+      </div>
+      <label class="toggle-wrap"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div class="notif-row-text">
+        <div class="notif-row-title">특가 · 프로모션</div>
+        <div class="notif-row-desc">할인 쿠폰 및 특별 혜택 안내</div>
+      </div>
+      <label class="toggle-wrap"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div class="notif-row-text">
+        <div class="notif-row-title">리뷰 요청</div>
+        <div class="notif-row-desc">체크아웃 후 리뷰 작성 안내</div>
+      </div>
+      <label class="toggle-wrap"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div class="notif-row-text">
+        <div class="notif-row-title">마케팅 · 뉴스레터</div>
+        <div class="notif-row-desc">새로운 여행지 및 숙소 소식</div>
+      </div>
+      <label class="toggle-wrap"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 언어
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-language" onclick="closeModal('language')"></div>
+<div class="modal-sheet" id="sh-language">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">언어 선택</span>
+    <button class="modal-close" onclick="closeModal('language')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div style="padding:4px 0">
+      <div class="font-option" onclick="closeModal('language')">
+        <div class="font-option-label">🇰🇷 한국어</div>
+        <span class="font-check">✓</span>
+      </div>
+      <div class="font-option" onclick="closeModal('language')">
+        <div class="font-option-label">🇺🇸 English</div>
+        <span class="font-check"></span>
+      </div>
+      <div class="font-option" onclick="closeModal('language')">
+        <div class="font-option-label">🇯🇵 日本語</div>
+        <span class="font-check"></span>
+      </div>
+      <div class="font-option" onclick="closeModal('language')">
+        <div class="font-option-label">🇨🇳 中文</div>
+        <span class="font-check"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 이용약관
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-terms" onclick="closeModal('terms')"></div>
+<div class="modal-sheet" id="sh-terms">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">이용약관 및 정책</span>
+    <button class="modal-close" onclick="closeModal('terms')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div style="padding:4px 0">
+      <div class="terms-item"><div class="terms-item-title">서비스 이용약관</div><span style="color:var(--chevron)">›</span></div>
+      <div class="terms-item"><div class="terms-item-title">개인정보처리방침</div><span style="color:var(--chevron)">›</span></div>
+      <div class="terms-item"><div class="terms-item-title">커뮤니티 정책</div><span style="color:var(--chevron)">›</span></div>
+      <div class="terms-item"><div class="terms-item-title">환불 정책</div><span style="color:var(--chevron)">›</span></div>
+      <div class="terms-item"><div class="terms-item-title">결제 서비스 약관</div><span style="color:var(--chevron)">›</span></div>
+      <div class="terms-item"><div class="terms-item-title">오픈소스 라이선스</div><span style="color:var(--chevron)">›</span></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 고객센터
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-support" onclick="closeModal('support')"></div>
+<div class="modal-sheet" id="sh-support">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">고객센터</span>
+    <button class="modal-close" onclick="closeModal('support')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="booking-card" style="text-align:center;padding:24px;border-radius:16px;">
+      <div style="font-size:40px;margin-bottom:12px">🎧</div>
+      <div style="font-size:17px;font-weight:700;color:var(--dark);margin-bottom:6px">무엇을 도와드릴까요?</div>
+      <div style="font-size:13px;color:var(--mid);line-height:1.6">예약, 결제, 환불, 숙소 관련 문의 사항을 접수해 드립니다.</div>
+    </div>
+    <div style="margin-top:16px;padding:4px 0">
+      <div class="terms-item"><div class="terms-item-title">💬 채팅으로 문의</div><span style="color:var(--chevron)">›</span></div>
+      <div class="terms-item"><div class="terms-item-title">📞 전화 상담 (24시간)</div><span style="color:var(--chevron)">›</span></div>
+      <div class="terms-item"><div class="terms-item-title">✉️ 이메일 문의</div><span style="color:var(--chevron)">›</span></div>
+      <div class="terms-item"><div class="terms-item-title">📋 자주 묻는 질문</div><span style="color:var(--chevron)">›</span></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 호스트 되기
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-hostSignup" onclick="closeModal('hostSignup')"></div>
+<div class="modal-sheet" id="sh-hostSignup">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">호스트 되기</span>
+    <button class="modal-close" onclick="closeModal('hostSignup')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div style="background:var(--card-bg);border:1.5px solid var(--card-border);border-radius:16px;padding:22px;text-align:center;margin-bottom:20px">
+      <div style="font-size:44px;margin-bottom:12px">🏠</div>
+      <div style="font-size:18px;font-weight:700;color:var(--dark);margin-bottom:8px">내 공간으로 수익 내기</div>
+      <div style="font-size:13px;color:var(--mid);line-height:1.6">빈 방이나 별채를 게스트에게 대여하고<br>추가 수입을 만들어 보세요.</div>
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:22px">📸</span>
+        <div><div style="font-size:14px;font-weight:700;color:var(--dark)">숙소 사진 등록</div><div style="font-size:12px;color:var(--mid)">멋진 사진으로 게스트 유치</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:22px">💰</span>
+        <div><div style="font-size:14px;font-weight:700;color:var(--dark)">가격 직접 설정</div><div style="font-size:12px;color:var(--mid)">원하는 금액으로 자유롭게</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0">
+        <span style="font-size:22px">🛡️</span>
+        <div><div style="font-size:14px;font-weight:700;color:var(--dark)">호스트 보호 보험 제공</div><div style="font-size:12px;color:var(--mid)">안심하고 호스팅하세요</div></div>
+      </div>
+    </div>
+    <button class="form-save-btn" onclick="closeModal('hostSignup')">시작하기</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 로그아웃
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-logout" onclick="closeModal('logout')"></div>
+<div class="modal-sheet" id="sh-logout">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">로그아웃</span>
+    <button class="modal-close" onclick="closeModal('logout')">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="danger-confirm-text">정말 로그아웃 하시겠어요? 다시 로그인하려면 이메일과 비밀번호가 필요합니다.</p>
+    <button class="form-save-btn" onclick="closeModal('logout')">로그아웃</button>
+    <div style="height:10px"></div>
+    <button class="cancel-btn" onclick="closeModal('logout')">취소</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: 회원 탈퇴
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="ov-deleteAccount" onclick="closeModal('deleteAccount')"></div>
+<div class="modal-sheet" id="sh-deleteAccount">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <span class="modal-title">회원 탈퇴</span>
+    <button class="modal-close" onclick="closeModal('deleteAccount')">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="danger-confirm-text">
+      탈퇴하시면 <strong>모든 예약 내역, 리뷰, 위시리스트</strong>가 영구적으로 삭제되며 복구할 수 없습니다.<br><br>
+      진행 중인 예약이 있을 경우 탈퇴가 제한될 수 있습니다.
+    </p>
+    <button class="danger-btn" onclick="closeModal('deleteAccount')">탈퇴 신청하기</button>
+    <button class="cancel-btn" onclick="closeModal('deleteAccount')">취소</button>
+  </div>
+</div>
+
+
+<script>
+// ── Modal open/close ───────────────────────
+function openModal(id) {
+  document.getElementById('ov-' + id).classList.add('open');
+  document.getElementById('sh-' + id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+  document.getElementById('ov-' + id).classList.remove('open');
+  document.getElementById('sh-' + id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Dark mode (common.js ThemeManager 사용) ──
+function toggleDark(cb) {
+  ThemeManager.set(cb.checked ? 'dark' : 'light');
+}
+
+// ── Font size (common.js FontSizeManager 사용) ──
+function setFontSize(size, label) {
+  document.querySelectorAll('[id^="fc-"]').forEach(el => el.textContent = '');
+  document.getElementById('fc-' + size).textContent = '✓';
+  document.getElementById('fontSizeLabel').textContent = label;
+  FontSizeManager.set(size);
+  closeModal('fontSize');
+}
+
+// ── 저장된 설정 복원 ─────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // 다크모드 토글 체크박스 초기화
+  document.getElementById('darkToggle').checked = ThemeManager.isDark();
+
+  // 폰트 크기 라벨 · 체크 표시 초기화
+  const savedSize = FontSizeManager.get();
+  const savedLabel = FontSizeManager.getLabel();
+  document.getElementById('fontSizeLabel').textContent = savedLabel;
+  const fcEl = document.getElementById('fc-' + savedSize);
+  if (fcEl) fcEl.textContent = '✓';
+});
+</script>
+</body>
+</html>

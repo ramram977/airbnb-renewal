@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>메시지 — Airbnb</title>
+  <script src="common.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary:    #E8A020;   /* 앰버 — 배지, 탭 활성 */
+      --primary-bg: #FEF9EE;   /* 극연한 노랑 — 버튼 bg */
+      --accent-bg:  #FEFCF7;   /* 페이지 배경 */
+      --surface:    #FFFFFF;
+      --border:     #F0E8D8;
+      --stay-color: #B87C00;   /* 숙소명 텍스트 */
+      --dark:       #2A2A2A;
+      --mid:        #9A9A9A;
+      --red:        #FF385C;
+    }
+
+    body {
+      font-family: -apple-system, 'Pretendard', 'SF Pro Display', sans-serif;
+      background: var(--accent-bg);
+      max-width: 390px;
+      margin: 0 auto;
+      min-height: 100dvh;
+    }
+
+    /* ── HEADER ── */
+    .msg-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      padding: 54px 20px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .msg-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .msg-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--dark);
+      letter-spacing: -0.5px;
+    }
+
+    .msg-header-actions { display: flex; gap: 8px; }
+
+    .msg-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.12s;
+    }
+    .msg-icon-btn:active { background: #FCF0CC; }
+
+    /* ── FILTER TABS ── */
+    .filter-tabs {
+      display: flex;
+      gap: 7px;
+      padding: 14px 20px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-tabs::-webkit-scrollbar { display: none; }
+
+    .filter-tab {
+      flex-shrink: 0;
+      padding: 6px 15px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--mid);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-tab.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .filter-tab:active { opacity: 0.75; }
+
+    /* ── CONVERSATION LIST ── */
+    .conv-list { padding: 10px 0 100px; }
+
+    .conv-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 15px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .conv-item:first-child { border-top: 1px solid var(--border); }
+    .conv-item:active { background: #FEFCF0; }
+
+    /* Avatar */
+    .conv-avatar { position: relative; flex-shrink: 0; }
+
+    .avatar-circle {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #A06000;
+    }
+
+    .avatar-online {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #5CB85C;
+      border: 2.5px solid var(--surface);
+    }
+
+    /* Conv content */
+    .conv-content { flex: 1; min-width: 0; }
+
+    .conv-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 3px;
+    }
+
+    .conv-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+
+    .conv-time {
+      font-size: 11.5px;
+      color: var(--mid);
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    .conv-stay {
+      font-size: 12px;
+      color: var(--stay-color);
+      font-weight: 600;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conv-preview-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .conv-preview {
+      font-size: 13.5px;
+      color: var(--mid);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+    .conv-preview.unread { color: var(--dark); font-weight: 600; }
+
+    .conv-badge {
+      flex-shrink: 0;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 60px 32px; display: none; }
+    .empty-icon { font-size: 48px; margin-bottom: 14px; }
+    .empty-title { font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+    .empty-desc { font-size: 14px; color: var(--mid); line-height: 1.5; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 390px;
+      height: 72px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 200;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+
+    .nav-icon { font-size: 22px; }
+    .nav-label { font-size: 10px; font-weight: 600; color: var(--mid); }
+    .nav-item.active .nav-icon,
+    .nav-item.active .nav-label { color: var(--red); }
+
+    .nav-item.map-hl .nav-icon-pill {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--dark);
+      border-radius: 20px;
+      padding: 5px 12px;
+    }
+    .nav-item.map-hl .nav-icon-pill .nav-icon { font-size: 17px; color: #fff; }
+    .nav-item.map-hl .nav-icon-pill .pill-lbl { color: #fff; font-size: 12px; font-weight: 700; }
+    .nav-item.map-hl > .nav-label { color: var(--red); font-weight: 700; margin-top: 2px; }
+
+    /* ════════════════════════════════════
+       DARK MODE
+    ════════════════════════════════════ */
+    html[data-theme="dark"] {
+      --primary:    #F0B030;
+      --primary-bg: #2A2010;
+      --accent-bg:  #141414;
+      --surface:    #1C1C1E;
+      --border:     #38383A;
+      --stay-color: #F0B030;
+      --dark:       #E5E5E7;
+      --mid:        #8E8E93;
+    }
+    [data-theme="dark"] body           { background: #141414; }
+    [data-theme="dark"] .msg-header    { background: #1C1C1E; border-bottom-color: #38383A; }
+    [data-theme="dark"] .msg-icon-btn  { background: #252528; }
+    [data-theme="dark"] .msg-icon-btn:active { background: #333336; }
+    [data-theme="dark"] .filter-tab    { background: #1C1C1E; border-color: #38383A; color: #8E8E93; }
+    [data-theme="dark"] .filter-tab.active { background: #F0B030; border-color: #F0B030; color: #fff; }
+    [data-theme="dark"] .conv-item     { background: #1C1C1E; border-bottom-color: #38383A; }
+    [data-theme="dark"] .conv-item:first-child { border-top-color: #38383A; }
+    [data-theme="dark"] .conv-item:active { background: #252528; }
+    [data-theme="dark"] .avatar-online { border-color: #1C1C1E; }
+    [data-theme="dark"] .bottom-nav    { background: rgba(20,20,20,0.97); border-top-color: #38383A; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="msg-header">
+    <div class="msg-header-row">
+      <h1 class="msg-title">메시지</h1>
+      <div class="msg-header-actions">
+        <button class="msg-icon-btn">🔍</button>
+        <button class="msg-icon-btn">✏️</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- FILTER TABS -->
+  <div class="filter-tabs">
+    <div class="filter-tab active" onclick="filterTab(this,'all')">전체</div>
+    <div class="filter-tab" onclick="filterTab(this,'unread')">읽지 않음</div>
+    <div class="filter-tab" onclick="filterTab(this,'hosting')">호스팅</div>
+    <div class="filter-tab" onclick="filterTab(this,'traveling')">여행 중</div>
+  </div>
+
+  <!-- CONVERSATION LIST -->
+  <div class="conv-list" id="convList"></div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="location.href='search.html'">
+      <div class="nav-icon">🔍</div>
+      <div class="nav-label">검색</div>
+    </div>
+    <div class="nav-item" onclick="location.href='index.html'">
+      <div class="nav-icon">✈️</div>
+      <div class="nav-label">여행</div>
+    </div>
+    <div class="nav-item map-hl" onclick="location.href='map.html'">
+      <div class="nav-icon-pill">
+        <span class="nav-icon">🗺️</span>
+        <span class="pill-lbl">지도</span>
+      </div>
+      <div class="nav-label">지도</div>
+    </div>
+    <div class="nav-item active">
+      <div class="nav-icon">💬</div>
+      <div class="nav-label">메시지</div>
+    </div>
+    <div class="nav-item" onclick="location.href='profile.html'" style="cursor:pointer">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">프로필</div>
+    </div>
+  </nav>
+
+<script>
+/* avatarColor: 단색 hex (그라데이션 없음) */
+const CONVERSATIONS = [
+  {
+    id: 1,
+    name: '지은 · 호스트',
+    avatar: '지',
+    avatarColor: '#F8DFA0',
+    online: true,
+    stay: '감성 한옥 스테이 · 서울',
+    preview: '체크인 시간은 오후 3시부터 가능합니다 😊',
+    time: '방금',
+    unread: 2,
+    type: 'traveling',
+  },
+  {
+    id: 2,
+    name: '민준 · 호스트',
+    avatar: '민',
+    avatarColor: '#F8D0A8',
+    online: false,
+    stay: '오션뷰 모던 아파트 · 부산',
+    preview: '네, 주차 공간은 1대 가능합니다!',
+    time: '10분',
+    unread: 0,
+    type: 'traveling',
+  },
+  {
+    id: 3,
+    name: '서연 · 게스트',
+    avatar: '서',
+    avatarColor: '#FAE8B0',
+    online: true,
+    stay: '내 숙소 · 제주시',
+    preview: '혹시 조식 제공되나요? 아침 일찍 도착할 것 같아서요.',
+    time: '1시간',
+    unread: 1,
+    type: 'hosting',
+  },
+  {
+    id: 4,
+    name: '하준 · 호스트',
+    avatar: '하',
+    avatarColor: '#F8CEAC',
+    online: false,
+    stay: '숲속 통나무 카빈 · 가평',
+    preview: '좋은 여행 되세요! 체크아웃 후 리뷰 남겨주시면 감사하겠습니다.',
+    time: '어제',
+    unread: 0,
+    type: 'traveling',
+  },
+  {
+    id: 5,
+    name: '예진 · 게스트',
+    avatar: '예',
+    avatarColor: '#FBF0C0',
+    online: false,
+    stay: '내 숙소 · 강릉',
+    preview: '정말 좋은 숙소였어요. 5점 드렸습니다 ⭐',
+    time: '2일 전',
+    unread: 0,
+    type: 'hosting',
+  },
+  {
+    id: 6,
+    name: 'Airbnb 고객지원',
+    avatar: '🏠',
+    avatarColor: '#F9CEAE',
+    online: true,
+    stay: '공식 지원팀',
+    preview: '안녕하세요! 무엇을 도와드릴까요?',
+    time: '3일 전',
+    unread: 0,
+    type: 'all',
+  },
+];
+
+let currentFilter = 'all';
+
+function filterTab(el, type) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = type;
+  renderList();
+}
+
+function renderList() {
+  const list = document.getElementById('convList');
+  const filtered = currentFilter === 'all'
+    ? CONVERSATIONS
+    : CONVERSATIONS.filter(c => c.type === currentFilter || c.type === 'all');
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state" style="display:block">
+      <div class="empty-icon">💬</div>
+      <div class="empty-title">메시지가 없습니다</div>
+      <div class="empty-desc">호스트나 게스트와의 대화가 여기에 표시됩니다.</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => `
+    <div class="conv-item" onclick="location.href='chat.html?id=${c.id}'">
+      <div class="conv-avatar">
+        <div class="avatar-circle" style="background:${c.avatarColor}">${c.avatar}</div>
+        ${c.online ? '<div class="avatar-online"></div>' : ''}
+      </div>
+      <div class="conv-content">
+        <div class="conv-top">
+          <span class="conv-name">${c.name}</span>
+          <span class="conv-time">${c.time}</span>
+        </div>
+        <div class="conv-stay">${c.stay}</div>
+        <div class="conv-preview-row">
+          <span class="conv-preview ${c.unread > 0 ? 'unread' : ''}">${c.preview}</span>
+          ${c.unread > 0 ? `<span class="conv-badge">${c.unread}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+renderList();
+</script>
+</body>
+</html>

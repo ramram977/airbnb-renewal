@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>채팅 — Airbnb</title>
+  <script src="common.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary:    #E8A020;
+      --primary-bg: #FEF9EE;
+      --bubble-me:  #FDEDB8;   /* 내 말풍선 — 극연한 노랑 */
+      --bubble-me-text: #7A5000; /* 내 말풍선 글자 */
+      --bubble-them:#FFFFFF;
+      --bg:         #FEFCF7;
+      --surface:    #FFFFFF;
+      --border:     #F0E8D8;
+      --stay-color: #B87C00;
+      --dark:       #2A2A2A;
+      --mid:        #9A9A9A;
+    }
+
+    body {
+      font-family: -apple-system, 'Pretendard', 'SF Pro Display', sans-serif;
+      background: var(--bg);
+      max-width: 390px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .chat-header {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 390px;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 16px 12px;
+    }
+
+    .chat-header-inner {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .chat-back {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      color: var(--dark);
+      flex-shrink: 0;
+      transition: background 0.12s;
+    }
+    .chat-back:active { background: #FCF0CC; }
+
+    .chat-host-info { flex: 1; min-width: 0; }
+
+    .chat-host-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .chat-host-meta {
+      font-size: 12px;
+      color: var(--stay-color);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-header-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #A06000;
+      flex-shrink: 0;
+    }
+
+    .chat-header-actions { display: flex; gap: 7px; }
+
+    .chat-icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.12s;
+    }
+    .chat-icon-btn:active { background: #FCF0CC; }
+
+    /* ── BOOKING BANNER ── */
+    .booking-banner {
+      margin: 0 16px;
+      padding: 13px 14px;
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .booking-banner:active { background: #FEFCF0; }
+
+    .booking-thumb {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .booking-info { flex: 1; min-width: 0; }
+    .booking-label {
+      font-size: 10.5px;
+      color: var(--mid);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+    .booking-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .booking-dates { font-size: 12px; color: var(--mid); margin-top: 2px; }
+    .booking-arrow { font-size: 18px; color: #C8B89A; flex-shrink: 0; }
+
+    /* ── MESSAGES AREA ── */
+    .chat-messages {
+      flex: 1;
+      padding: 120px 16px 86px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .msg-date-divider {
+      text-align: center;
+      margin: 16px 0 8px;
+    }
+    .msg-date-divider span {
+      background: #EDE5D0;
+      color: #A09070;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 13px;
+      border-radius: 12px;
+    }
+
+    /* Bubble groups */
+    .bubble-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 10px;
+    }
+    .bubble-group.me  { align-items: flex-end; }
+    .bubble-group.them { align-items: flex-start; }
+
+    .bubble-sender-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .bubble-group.me .bubble-sender-row { flex-direction: row-reverse; }
+
+    .bubble-mini-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #A06000;
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+    .bubble-mini-avatar.hidden { visibility: hidden; }
+
+    .bubble-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 72%;
+    }
+    .bubble-group.me .bubble-stack { align-items: flex-end; }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 14.5px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    /* them bubbles: white, subtle shadow */
+    .bubble-group.them .bubble {
+      background: var(--bubble-them);
+      color: var(--dark);
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+    .bubble-group.them .bubble:first-child { border-top-left-radius: 18px; }
+    .bubble-group.them .bubble:last-child  { border-bottom-left-radius: 18px; }
+
+    /* me bubbles: pale yellow */
+    .bubble-group.me .bubble {
+      background: var(--bubble-me);
+      color: var(--bubble-me-text);
+      border-bottom-right-radius: 4px;
+    }
+    .bubble-group.me .bubble:first-child { border-top-right-radius: 18px; }
+    .bubble-group.me .bubble:last-child  { border-bottom-right-radius: 18px; }
+
+    .bubble-time {
+      font-size: 11px;
+      color: #B8A890;
+      margin-top: 4px;
+      padding: 0 4px;
+    }
+
+    /* ── TYPING ── */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .typing-dots {
+      background: var(--surface);
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      padding: 11px 15px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #D8C8A8;
+      animation: typing-bounce 1.2s infinite ease-in-out;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing-bounce {
+      0%, 60%, 100% { transform: translateY(0); background: #D8C8A8; }
+      30% { transform: translateY(-5px); background: var(--primary); }
+    }
+
+    /* ── INPUT BAR ── */
+    .chat-input-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 390px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 10px 12px 26px;
+      display: flex;
+      align-items: flex-end;
+      gap: 9px;
+      z-index: 100;
+    }
+
+    .input-add-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      flex-shrink: 0;
+      color: var(--dark);
+      transition: background 0.12s;
+    }
+    .input-add-btn:active { background: #FCF0CC; }
+
+    .input-wrap {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      background: #FEFAF0;
+      border: 1.5px solid var(--border);
+      border-radius: 22px;
+      padding: 8px 13px;
+      gap: 7px;
+      min-height: 38px;
+    }
+
+    .chat-textarea {
+      flex: 1;
+      border: none;
+      background: transparent;
+      resize: none;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--dark);
+      max-height: 100px;
+      min-height: 22px;
+      line-height: 1.4;
+      outline: none;
+    }
+    .chat-textarea::placeholder { color: #D0C0A0; }
+
+    .emoji-btn {
+      font-size: 19px;
+      cursor: pointer;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 17px;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .send-btn:active { background: #D09010; transform: scale(0.92); }
+    .send-btn:disabled { background: #EEE4C8; cursor: default; transform: none; }
+
+    /* ════════════════════════════════════
+       DARK MODE
+    ════════════════════════════════════ */
+    html[data-theme="dark"] {
+      --primary:         #F0B030;
+      --primary-bg:      #2A2010;
+      --bubble-me:       #3A2C08;
+      --bubble-me-text:  #F5D878;
+      --bubble-them:     #2C2C2E;
+      --bg:              #141414;
+      --surface:         #1C1C1E;
+      --border:          #38383A;
+      --stay-color:      #F0B030;
+      --dark:            #E5E5E7;
+      --mid:             #8E8E93;
+    }
+    [data-theme="dark"] body                { background: #141414; }
+    [data-theme="dark"] .chat-header        { background: #1C1C1E; border-bottom-color: #38383A; }
+    [data-theme="dark"] .chat-back          { background: #252528; }
+    [data-theme="dark"] .chat-back:active   { background: #333336; }
+    [data-theme="dark"] .chat-icon-btn      { background: #252528; }
+    [data-theme="dark"] .chat-icon-btn:active { background: #333336; }
+    [data-theme="dark"] .booking-banner     { background: #252528; border-color: #38383A; }
+    [data-theme="dark"] .booking-banner:active { background: #2C2C2E; }
+    [data-theme="dark"] .booking-arrow      { color: #8E8E93; }
+    [data-theme="dark"] .msg-date-divider span {
+      background: #2C2C2E;
+      color: #8E8E93;
+    }
+    [data-theme="dark"] .bubble-group.them .bubble {
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    [data-theme="dark"] .bubble-time        { color: #636366; }
+    [data-theme="dark"] .typing-dots        { background: #2C2C2E; }
+    [data-theme="dark"] .dot                { background: #636366; }
+    [data-theme="dark"] .chat-input-bar     { background: #1C1C1E; border-top-color: #38383A; }
+    [data-theme="dark"] .input-add-btn      { background: #252528; }
+    [data-theme="dark"] .input-add-btn:active { background: #333336; }
+    [data-theme="dark"] .input-wrap         { background: #252528; border-color: #38383A; }
+    [data-theme="dark"] .chat-textarea      { color: #E5E5E7; }
+    [data-theme="dark"] .chat-textarea::placeholder { color: #636366; }
+    [data-theme="dark"] .send-btn:disabled  { background: #3A3A3C; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="chat-header">
+    <div class="chat-header-inner">
+      <button class="chat-back" onclick="history.back()">‹</button>
+      <div class="chat-host-info">
+        <div class="chat-host-name" id="chatHostName">지은 · 호스트</div>
+        <div class="chat-host-meta" id="chatHostMeta">감성 한옥 스테이 · 서울</div>
+      </div>
+      <div id="chatHeaderAvatar" class="chat-header-avatar">지</div>
+      <div class="chat-header-actions">
+        <button class="chat-icon-btn">📞</button>
+        <button class="chat-icon-btn">⋯</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MESSAGES -->
+  <div class="chat-messages" id="chatMessages"></div>
+
+  <!-- INPUT BAR -->
+  <div class="chat-input-bar">
+    <button class="input-add-btn">＋</button>
+    <div class="input-wrap">
+      <textarea
+        class="chat-textarea"
+        id="chatInput"
+        placeholder="메시지 입력..."
+        rows="1"
+        oninput="onInput(this)"
+        onkeydown="onKeyDown(event)"
+      ></textarea>
+      <span class="emoji-btn">😊</span>
+    </div>
+    <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled>↑</button>
+  </div>
+
+<script>
+/* avatarColor: 단색 hex */
+const CONVERSATIONS = {
+  1: {
+    name: '지은 · 호스트',
+    avatar: '지',
+    avatarColor: '#F8DFA0',
+    online: true,
+    stay: '감성 한옥 스테이 · 서울',
+    stayDates: '5월 10일 – 13일',
+    thumbBg: '#FFF5D6',
+    messages: [
+      { from: 'them', text: '안녕하세요! 예약해 주셔서 감사합니다 😊', time: '오전 10:05', date: '2025년 5월 2일' },
+      { from: 'them', text: '체크인 관련해서 안내드릴게요.', time: '오전 10:05' },
+      { from: 'me',   text: '안녕하세요! 잘 부탁드립니다 🙏', time: '오전 10:12' },
+      { from: 'me',   text: '혹시 주차 가능한가요?', time: '오전 10:13' },
+      { from: 'them', text: '네, 숙소 바로 앞 골목에 주차 가능합니다! 한 대만 가능해요.', time: '오전 10:20' },
+      { from: 'me',   text: '감사합니다 😊', time: '오전 10:22' },
+      { from: 'them', text: '체크인 시간은 오후 3시부터 가능합니다 😊', time: '방금', date: '오늘' },
+    ],
+  },
+  2: {
+    name: '민준 · 호스트',
+    avatar: '민',
+    avatarColor: '#F8D0A8',
+    online: false,
+    stay: '오션뷰 모던 아파트 · 부산',
+    stayDates: '6월 1일 – 3일',
+    thumbBg: '#FFF0E6',
+    messages: [
+      { from: 'them', text: '예약 확인되었습니다! 부산에서의 즐거운 여행 기대해 주세요 🌊', time: '오후 2:30', date: '2025년 5월 1일' },
+      { from: 'me',   text: '감사합니다! 오션뷰가 정말 기대되네요.', time: '오후 3:01' },
+      { from: 'me',   text: '혹시 주차 공간이 있을까요?', time: '오후 3:02' },
+      { from: 'them', text: '네, 주차 공간은 1대 가능합니다!', time: '오후 3:15' },
+    ],
+  },
+  3: {
+    name: '서연 · 게스트',
+    avatar: '서',
+    avatarColor: '#FAE8B0',
+    online: true,
+    stay: '내 숙소 · 제주시',
+    stayDates: '5월 20일 – 22일',
+    thumbBg: '#FFF8E0',
+    messages: [
+      { from: 'them', text: '안녕하세요, 호스트님! 예약 감사해요.', time: '오전 9:00', date: '오늘' },
+      { from: 'me',   text: '안녕하세요! 환영합니다 😊', time: '오전 9:05' },
+      { from: 'me',   text: '제주에서의 여행이 즐거우시길 바랍니다!', time: '오전 9:05' },
+      { from: 'them', text: '혹시 조식 제공되나요? 아침 일찍 도착할 것 같아서요.', time: '오전 9:10' },
+    ],
+  },
+  4: {
+    name: '하준 · 호스트',
+    avatar: '하',
+    avatarColor: '#F8CEAC',
+    online: false,
+    stay: '숲속 통나무 카빈 · 가평',
+    stayDates: '4월 25일 – 27일',
+    thumbBg: '#FFF3E6',
+    messages: [
+      { from: 'them', text: '가평 카빈에 오신 것을 환영합니다! 🌲', time: '오전 11:00', date: '4월 24일' },
+      { from: 'me',   text: '와 기대돼요!', time: '오전 11:15' },
+      { from: 'them', text: '근처에 닭갈비 맛집을 알려드릴게요 😄', time: '오전 11:20' },
+      { from: 'me',   text: '감사합니다!', time: '오전 11:25' },
+      { from: 'them', text: '좋은 여행 되세요! 체크아웃 후 리뷰 남겨주시면 감사하겠습니다.', time: '오후 1:30', date: '4월 27일' },
+    ],
+  },
+  5: {
+    name: '예진 · 게스트',
+    avatar: '예',
+    avatarColor: '#FBF0C0',
+    online: false,
+    stay: '내 숙소 · 강릉',
+    stayDates: '4월 18일 – 20일',
+    thumbBg: '#FFFAE6',
+    messages: [
+      { from: 'them', text: '호스트님 정말 친절하게 안내해 주셨어요 🙏', time: '오후 4:00', date: '4월 20일' },
+      { from: 'me',   text: '즐거운 시간 되셨다니 다행이에요!', time: '오후 4:10' },
+      { from: 'them', text: '정말 좋은 숙소였어요. 5점 드렸습니다 ⭐', time: '오후 4:12' },
+      { from: 'me',   text: '감사합니다! 다음에 또 오세요 😊', time: '오후 4:20' },
+    ],
+  },
+  6: {
+    name: 'Airbnb 고객지원',
+    avatar: '🏠',
+    avatarColor: '#F9CEAE',
+    online: true,
+    stay: '공식 지원팀',
+    stayDates: '',
+    thumbBg: '#FFF0E8',
+    messages: [
+      { from: 'them', text: '안녕하세요! Airbnb 고객지원입니다.', time: '오전 9:00', date: '4월 17일' },
+      { from: 'them', text: '무엇을 도와드릴까요?', time: '오전 9:00' },
+    ],
+  },
+};
+
+// ── Init ──────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const convId = parseInt(params.get('id')) || 1;
+const conv = CONVERSATIONS[convId] || CONVERSATIONS[1];
+
+document.getElementById('chatHostName').textContent = conv.name;
+document.getElementById('chatHostMeta').textContent = conv.stay;
+const avatarEl = document.getElementById('chatHeaderAvatar');
+avatarEl.textContent = conv.avatar;
+avatarEl.style.background = conv.avatarColor;
+
+// ── Render messages ───────────────────────────────────
+const container = document.getElementById('chatMessages');
+
+function renderMessages(msgs) {
+  let html = '';
+  let i = 0;
+
+  // Booking banner
+  if (conv.stayDates) {
+    html += `<div style="margin-bottom:16px">
+      <div class="booking-banner">
+        <div class="booking-thumb" style="background:${conv.thumbBg}">
+          <span>${conv.avatar}</span>
+        </div>
+        <div class="booking-info">
+          <div class="booking-label">예약 정보</div>
+          <div class="booking-title">${conv.stay}</div>
+          <div class="booking-dates">${conv.stayDates}</div>
+        </div>
+        <div class="booking-arrow">›</div>
+      </div>
+    </div>`;
+  }
+
+  while (i < msgs.length) {
+    const msg = msgs[i];
+
+    if (msg.date) {
+      html += `<div class="msg-date-divider"><span>${msg.date}</span></div>`;
+    }
+
+    const groupFrom = msg.from;
+    const groupMsgs = [];
+    let j = i;
+    while (j < msgs.length) {
+      if (msgs[j].from !== groupFrom) break;
+      groupMsgs.push(msgs[j]);
+      j++;
+      if (j < msgs.length && msgs[j].date) break;
+    }
+
+    const isMe = groupFrom === 'me';
+    const miniAvatar = isMe
+      ? ''
+      : `<div class="bubble-mini-avatar" style="background:${conv.avatarColor}">${conv.avatar}</div>`;
+
+    html += `<div class="bubble-group ${isMe ? 'me' : 'them'}">
+      <div class="bubble-sender-row">
+        ${miniAvatar}
+        <div class="bubble-stack">
+          ${groupMsgs.map(m => `<div class="bubble">${m.text}</div>`).join('')}
+          <div class="bubble-time">${groupMsgs[groupMsgs.length - 1].time}</div>
+        </div>
+      </div>
+    </div>`;
+
+    i = j;
+  }
+
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+
+renderMessages(conv.messages);
+
+// ── Typing indicator (conv 3 demo) ───────────────────
+if (conv.online && convId === 3) {
+  setTimeout(() => {
+    const miniAvatar = `<div class="bubble-mini-avatar" style="background:${conv.avatarColor}">${conv.avatar}</div>`;
+    container.insertAdjacentHTML('beforeend',
+      `<div class="typing-indicator" id="typingInd">
+        ${miniAvatar}
+        <div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>`
+    );
+    container.scrollTop = container.scrollHeight;
+  }, 1200);
+}
+
+// ── Send message ──────────────────────────────────────
+function onInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  document.getElementById('sendBtn').disabled = el.value.trim().length === 0;
+}
+
+function onKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
+}
+
+function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  document.getElementById('typingInd')?.remove();
+
+  const now = new Date();
+  const h = now.getHours(), m = String(now.getMinutes()).padStart(2,'0');
+  const timeStr = `${h < 12 ? '오전' : '오후'} ${h <= 12 ? h : h - 12}:${m}`;
+
+  container.insertAdjacentHTML('beforeend',
+    `<div class="bubble-group me">
+      <div class="bubble-sender-row">
+        <div class="bubble-stack">
+          <div class="bubble">${escapeHtml(text)}</div>
+          <div class="bubble-time">${timeStr}</div>
+        </div>
+      </div>
+    </div>`
+  );
+  container.scrollTop = container.scrollHeight;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+
+  // Auto-reply simulation (conv 1)
+  if (convId === 1) {
+    const miniAvatar = `<div class="bubble-mini-avatar" style="background:${conv.avatarColor}">${conv.avatar}</div>`;
+    setTimeout(() => {
+      container.insertAdjacentHTML('beforeend',
+        `<div class="typing-indicator" id="typingReply">
+          ${miniAvatar}
+          <div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>`
+      );
+      container.scrollTop = container.scrollHeight;
+
+      setTimeout(() => {
+        document.getElementById('typingReply')?.remove();
+        const replies = ['네, 확인했습니다! 😊','알겠습니다 👍','감사합니다! 좋은 하루 되세요.','네, 편하게 연락 주세요~'];
+        const reply = replies[Math.floor(Math.random() * replies.length)];
+        const rt = new Date();
+        const rh = rt.getHours(), rm = String(rt.getMinutes()).padStart(2,'0');
+        const rTime = `${rh < 12 ? '오전' : '오후'} ${rh <= 12 ? rh : rh - 12}:${rm}`;
+        container.insertAdjacentHTML('beforeend',
+          `<div class="bubble-group them">
+            <div class="bubble-sender-row">
+              ${miniAvatar}
+              <div class="bubble-stack">
+                <div class="bubble">${reply}</div>
+                <div class="bubble-time">${rTime}</div>
+              </div>
+            </div>
+          </div>`
+        );
+        container.scrollTop = container.scrollHeight;
+      }, 1500);
+    }, 600);
+  }
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

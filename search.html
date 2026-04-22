@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>검색 — Airbnb</title>
+  <script src="common.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --red: #FF385C;
+      --dark: #222222;
+      --mid: #717171;
+      --light: #EBEBEB;
+      --white: #FFFFFF;
+    }
+    body {
+      font-family: -apple-system, 'Pretendard', 'SF Pro Display', sans-serif;
+      background: #F7F7F7;
+      max-width: 390px;
+      margin: 0 auto;
+      min-height: 100dvh;
+    }
+    .app { position: relative; min-height: 100dvh; }
+
+    /* ── HEADER ── */
+    .srch-header {
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      padding: 50px 20px 16px;
+      z-index: 100;
+      box-shadow: 0 1px 0 rgba(0,0,0,.08);
+    }
+    .srch-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .back-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid var(--light);
+      background: var(--white);
+      font-size: 17px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .srch-title { font-size: 17px; font-weight: 700; color: var(--dark); }
+
+    .srch-dest {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .srch-dest-icon {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%); font-size: 15px;
+    }
+    .srch-dest input {
+      width: 100%;
+      padding: 12px 16px 12px 40px;
+      border: 1.5px solid var(--light);
+      border-radius: 13px;
+      font-size: 14px;
+      color: var(--dark);
+      outline: none;
+      background: #fafafa;
+      transition: border-color .15s, background .15s;
+    }
+    .srch-dest input:focus { border-color: var(--dark); background: var(--white); }
+
+    .srch-chips {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .chip {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1.5px solid var(--light);
+      border-radius: 12px;
+      background: #fafafa;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color .15s;
+    }
+    .chip.has-val { border-color: var(--dark); background: var(--white); }
+    .chip-lbl { font-size: 10px; color: var(--mid); display: block; margin-bottom: 2px; }
+    .chip-val { font-size: 12.5px; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .chip.has-val .chip-val { color: var(--dark); font-weight: 600; }
+
+    .srch-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      border-radius: 13px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .srch-btn:active { opacity: .85; }
+
+    /* ── COLLAPSIBLE SEARCH ── */
+    .srch-top {
+      overflow: hidden;
+      max-height: 60px;
+      opacity: 1;
+      transition: max-height .3s ease, opacity .22s ease, margin-bottom .3s ease;
+    }
+    .srch-header.collapsed .srch-top {
+      max-height: 0; opacity: 0; margin-bottom: 0 !important; pointer-events: none;
+    }
+    .srch-form {
+      overflow: hidden;
+      max-height: 400px;
+      opacity: 1;
+      transition: max-height .35s ease, opacity .22s ease;
+    }
+    .srch-header.collapsed .srch-form {
+      max-height: 0; opacity: 0; pointer-events: none;
+    }
+    .srch-compact {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--white);
+      border: 1.5px solid var(--light);
+      border-radius: 40px;
+      padding: 9px 9px 9px 16px;
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,0,0,.09);
+      overflow: hidden;
+      max-height: 0; opacity: 0; pointer-events: none;
+      transition: max-height .3s ease, opacity .22s ease;
+    }
+    .srch-header.collapsed .srch-compact {
+      max-height: 60px; opacity: 1; pointer-events: auto;
+    }
+    .srch-compact-info { flex: 1; min-width: 0; }
+    .srch-compact-dest {
+      display: block;
+      font-size: 13.5px; font-weight: 700; color: var(--dark);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .srch-compact-meta {
+      display: block;
+      font-size: 11px; color: var(--mid); margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .srch-compact-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--red); border: none;
+      color: var(--white); font-size: 14px;
+      cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── RESULTS ── */
+    .results-wrap {
+      padding: 14px 16px 160px;
+      display: none;
+    }
+    .results-meta {
+      font-size: 13px; color: var(--mid);
+      font-weight: 500; margin-bottom: 12px;
+    }
+    .result-card {
+      display: flex;
+      gap: 12px;
+      background: var(--white);
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 11px;
+      box-shadow: 0 1px 8px rgba(0,0,0,.07);
+      cursor: pointer;
+      min-height: 130px;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .result-card:active { transform: scale(.985); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+    .result-img {
+      width: 96px; height: 106px;
+      border-radius: 11px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .result-info {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 2px 0;
+    }
+    .result-name {
+      font-size: 13.5px; font-weight: 700; color: var(--dark);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .result-loc { font-size: 11px; color: var(--mid); margin-top: 2px; }
+    .result-host { font-size: 11px; color: var(--mid); margin-top: 1px; }
+    .result-desc {
+      font-size: 11px; color: var(--mid); margin-top: 4px;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;
+    }
+    .result-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 4px;
+    }
+    .result-stars { font-size: 11.5px; color: var(--dark); }
+    .result-price { font-size: 13.5px; font-weight: 700; color: var(--dark); }
+    .result-price span { font-size: 10.5px; font-weight: 400; color: var(--mid); }
+
+    /* ── MAP FAB ── */
+    .map-fab {
+      position: fixed;
+      bottom: 94px; right: 20px;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--dark);
+      color: var(--white);
+      border: none;
+      box-shadow: 0 4px 18px rgba(0,0,0,.28);
+      font-size: 21px;
+      cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      z-index: 150;
+      transition: transform .15s;
+    }
+    .map-fab.on { display: flex; }
+    .map-fab:active { transform: scale(.9); }
+
+    /* ── OVERLAY & SHEET ── */
+    .ovl {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.42);
+      z-index: 200;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .ovl.on { opacity: 1; pointer-events: auto; }
+
+    .sheet {
+      position: fixed; bottom: 0; left: 50%;
+      transform: translateX(-50%) translateY(101%);
+      width: 390px;
+      background: var(--white);
+      border-radius: 24px 24px 0 0;
+      z-index: 201;
+      transition: transform .3s cubic-bezier(.32,.72,0,1);
+      max-height: 88dvh; overflow-y: auto;
+      padding: 0 20px 40px;
+    }
+    .sheet.on { transform: translateX(-50%) translateY(0); }
+
+    .s-handle {
+      width: 40px; height: 4px;
+      background: var(--light); border-radius: 2px;
+      margin: 12px auto 0;
+    }
+    .s-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0 8px;
+    }
+    .s-title { font-size: 17px; font-weight: 700; }
+    .s-clear { font-size: 13px; color: var(--mid); background: none; border: none; cursor: pointer; text-decoration: underline; }
+    .s-ok {
+      width: 100%; padding: 14px;
+      background: var(--red); color: var(--white);
+      border: none; border-radius: 13px;
+      font-size: 15px; font-weight: 700;
+      margin-top: 16px; cursor: pointer;
+    }
+
+    /* ── CALENDAR ── */
+    .cal-nav {
+      display: flex; justify-content: space-between;
+      margin: 4px 0 12px;
+    }
+    .cal-nav button {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1.5px solid var(--light); background: var(--white);
+      font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cal-month { margin-bottom: 20px; }
+    .cal-m-title {
+      text-align: center; font-size: 14.5px; font-weight: 700;
+      margin-bottom: 10px; color: var(--dark);
+    }
+    .cal-hdr {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      text-align: center; font-size: 11px; color: var(--mid);
+      margin-bottom: 4px;
+    }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+    }
+    .cal-cell {
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; cursor: pointer;
+      border-radius: 50%;
+      position: relative; z-index: 1;
+      transition: background .1s, color .1s;
+    }
+    .cal-cell.empty, .cal-cell.past { pointer-events: none; }
+    .cal-cell.past { color: #CCC; }
+    .cal-cell.today { font-weight: 700; }
+    .cal-cell.today::after {
+      content: ''; position: absolute; bottom: 4px; left: 50%;
+      transform: translateX(-50%);
+      width: 3px; height: 3px; border-radius: 50%; background: var(--red);
+    }
+    .cal-cell.sel-start, .cal-cell.sel-end {
+      background: var(--dark) !important; color: var(--white) !important;
+      font-weight: 700;
+    }
+    .cal-cell.in-range {
+      background: #EFEFEF; border-radius: 0; color: var(--dark);
+    }
+    /* range tails */
+    .cal-cell.sel-start.rng-on { border-radius: 50% 0 0 50%; }
+    .cal-cell.sel-end.rng-on  { border-radius: 0 50% 50% 0; }
+
+    /* ── GUESTS ── */
+    .g-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0; border-bottom: 1px solid var(--light);
+    }
+    .g-row:last-child { border-bottom: none; }
+    .g-type { font-size: 14px; font-weight: 600; color: var(--dark); }
+    .g-sub { font-size: 11.5px; color: var(--mid); margin-top: 2px; }
+    .g-ctrl { display: flex; align-items: center; gap: 14px; }
+    .g-ctrl button {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1.5px solid var(--light); background: var(--white);
+      font-size: 19px; cursor: pointer; color: var(--dark);
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s;
+    }
+    .g-ctrl button:disabled { color: #CCC; border-color: #EEE; cursor: default; }
+    .g-ctrl button:not(:disabled):hover { border-color: var(--dark); }
+    .g-num { font-size: 15px; font-weight: 600; min-width: 22px; text-align: center; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 390px;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0,0,0,.08);
+      display: flex; align-items: flex-start; justify-content: space-around;
+      padding: 10px 0 28px; z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; cursor: pointer; flex: 1;
+    }
+    .nav-icon { font-size: 22px; color: var(--mid); }
+    .nav-label { font-size: 10.5px; color: var(--mid); font-weight: 500; }
+    .nav-item.active .nav-icon, .nav-item.active .nav-label { color: var(--red); }
+    .nav-item.map-hl .nav-icon-pill {
+      background: var(--red); border-radius: 50px;
+      padding: 10px 18px; display: flex; align-items: center; gap: 5px;
+      margin-top: -22px; box-shadow: 0 4px 16px rgba(255,56,92,.42);
+    }
+    .nav-item.map-hl .nav-icon-pill .nav-icon { color: #fff; font-size: 17px; }
+    .nav-item.map-hl .nav-icon-pill .pill-lbl { color: #fff; font-size: 12px; font-weight: 700; }
+    .nav-item.map-hl > .nav-label { color: var(--red); font-weight: 700; margin-top: 2px; }
+
+    /* ════════════════════════════════════
+       DARK MODE
+    ════════════════════════════════════ */
+    html[data-theme="dark"] {
+      --dark:  #E5E5E7;
+      --mid:   #8E8E93;
+      --light: #38383A;
+    }
+    [data-theme="dark"] body { background: #141414; }
+
+    [data-theme="dark"] .srch-header {
+      background: #1C1C1E;
+      box-shadow: 0 1px 0 rgba(255,255,255,.06);
+    }
+    [data-theme="dark"] .back-btn {
+      background: #252528;
+      border-color: #38383A;
+    }
+    [data-theme="dark"] .srch-dest input {
+      background: #252528;
+      border-color: #38383A;
+      color: #E5E5E7;
+    }
+    [data-theme="dark"] .srch-dest input:focus {
+      border-color: #E5E5E7;
+      background: #2C2C2E;
+    }
+    [data-theme="dark"] .chip {
+      background: #252528;
+      border-color: #38383A;
+    }
+    [data-theme="dark"] .chip.has-val {
+      background: #2C2C2E;
+      border-color: #8E8E93;
+    }
+    [data-theme="dark"] .srch-compact {
+      background: #1C1C1E;
+      border-color: #38383A;
+      box-shadow: 0 2px 12px rgba(0,0,0,.4);
+    }
+    [data-theme="dark"] .result-card {
+      background: #1C1C1E;
+      box-shadow: 0 1px 8px rgba(0,0,0,.4);
+    }
+    [data-theme="dark"] .results-meta { color: #8E8E93; }
+
+    [data-theme="dark"] .sheet {
+      background: #1C1C1E;
+    }
+    [data-theme="dark"] .s-handle { background: #38383A; }
+    [data-theme="dark"] .cal-nav button {
+      background: #252528;
+      border-color: #38383A;
+      color: #E5E5E7;
+    }
+    [data-theme="dark"] .cal-cell.past { color: #48484A; }
+    [data-theme="dark"] .cal-cell.in-range {
+      background: #2C2C2E;
+      color: #E5E5E7;
+    }
+    [data-theme="dark"] .g-ctrl button {
+      background: #252528;
+      border-color: #38383A;
+      color: #E5E5E7;
+    }
+    [data-theme="dark"] .g-ctrl button:disabled { color: #38383A; border-color: #2C2C2E; }
+    [data-theme="dark"] .map-fab { background: #E5E5E7; color: #141414; }
+
+    [data-theme="dark"] .bottom-nav {
+      background: rgba(20,20,20,0.97);
+      border-top-color: #38383A;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── SEARCH HEADER ── -->
+  <div class="srch-header" id="srchHeader">
+    <div class="srch-top">
+      <button class="back-btn" onclick="location.href='index.html'">←</button>
+      <span class="srch-title">어디로 떠나시나요?</span>
+    </div>
+    <!-- 컴팩트 바 (검색 후 표시) -->
+    <div class="srch-compact" id="srchCompact" onclick="expandSearch()">
+      <div class="srch-compact-info">
+        <span class="srch-compact-dest" id="compactDest">—</span>
+        <span class="srch-compact-meta" id="compactMeta">날짜 · 인원</span>
+      </div>
+      <button class="srch-compact-btn" onclick="event.stopPropagation(); expandSearch()">🔍</button>
+    </div>
+    <!-- 전체 폼 (검색 후 접힘) -->
+    <div class="srch-form" id="srchForm">
+      <div class="srch-dest">
+        <span class="srch-dest-icon">📍</span>
+        <input type="search" id="destInput" placeholder="도시, 지역, 숙소 이름" autocomplete="off" enterkeyhint="search" />
+      </div>
+      <div class="srch-chips">
+        <button class="chip" id="dateChip" onclick="openCal()">
+          <span class="chip-lbl">날짜</span>
+          <span class="chip-val" id="dateVal">날짜 추가</span>
+        </button>
+        <button class="chip has-val" id="guestChip" onclick="openGuests()">
+          <span class="chip-lbl">인원</span>
+          <span class="chip-val" id="guestVal">성인 1명</span>
+        </button>
+      </div>
+      <button class="srch-btn" onclick="runSearch()">🔍 검색하기</button>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div class="results-wrap" id="resultsWrap">
+    <p class="results-meta" id="resultsMeta"></p>
+    <div id="resultsList"></div>
+  </div>
+
+  <!-- ── MAP FAB ── -->
+  <button class="map-fab" id="mapFab" onclick="goToMap()">🗺️</button>
+
+  <!-- ── CALENDAR SHEET ── -->
+  <div class="ovl" id="calOvl" onclick="closeCal()"></div>
+  <div class="sheet" id="calSheet">
+    <div class="s-handle"></div>
+    <div class="s-top">
+      <span class="s-title">날짜 선택</span>
+      <button class="s-clear" onclick="clearDates()">초기화</button>
+    </div>
+    <div class="cal-nav">
+      <button onclick="moveCal(-1)">‹</button>
+      <button onclick="moveCal(1)">›</button>
+    </div>
+    <div id="calBody"></div>
+    <button class="s-ok" onclick="closeCal()">확인</button>
+  </div>
+
+  <!-- ── GUESTS SHEET ── -->
+  <div class="ovl" id="guestOvl" onclick="closeGuests()"></div>
+  <div class="sheet" id="guestSheet">
+    <div class="s-handle"></div>
+    <div class="s-top"><span class="s-title">인원 선택</span></div>
+    <div id="guestBody"></div>
+    <button class="s-ok" onclick="closeGuests()">확인</button>
+  </div>
+
+  <!-- ── BOTTOM NAV ── -->
+  <nav class="bottom-nav">
+    <div class="nav-item active">
+      <span class="nav-icon">🔍</span>
+      <span class="nav-label">검색</span>
+    </div>
+    <div class="nav-item" onclick="location.href='index.html'">
+      <span class="nav-icon">✈️</span>
+      <span class="nav-label">여행</span>
+    </div>
+    <div class="nav-item map-hl" onclick="location.href='map.html'">
+      <div class="nav-icon-pill">
+        <span class="nav-icon">🗺️</span>
+        <span class="pill-lbl">지도</span>
+      </div>
+      <span class="nav-label">지도</span>
+    </div>
+    <div class="nav-item" onclick="location.href='messages.html'" style="cursor:pointer">
+      <span class="nav-icon">💬</span>
+      <span class="nav-label">메시지</span>
+    </div>
+    <div class="nav-item" onclick="location.href='profile.html'" style="cursor:pointer">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">프로필</span>
+    </div>
+  </nav>
+</div>
+
+<script>
+/* ── DATA ── */
+const IMGS = [
+  'rooms/room1.jpg',
+  'rooms/room2.jpg',
+  'rooms/room3.jpg',
+  'rooms/room4.jpg',
+  'rooms/room5.jpg',
+  'rooms/room6.jpg',
+  'rooms/room7.jpg',
+  'rooms/room8.jpg',
+  'rooms/room9.jpg',
+  'rooms/room10.jpg',
+  'rooms/room11.jpg',
+  'rooms/room12.jpg',
+  'rooms/room13.jpg',
+  'rooms/room14.jpg',
+  'rooms/room15.jpg',
+];
+
+const STAYS = [
+  { name: '스위스 마운틴 샬레',    price: 285000, rating: 4.98, reviews: 237, img:  0, desc: '알프스 뷰 · 통나무집 · 2베드룸',     host: '소피아', loc: '인터라켄',      detailId: 3 },
+  { name: '미니멀 모던 스튜디오',  price: 142000, rating: 4.92, reviews: 184, img:  1, desc: '도심 뷰 · 모던 인테리어 · 1베드룸',  host: '지민',   loc: '서울 성수',     detailId: 5 },
+  { name: '제주 힐링 스테이',      price: 198000, rating: 4.87, reviews:  96, img:  2, desc: '바다 뷰 · 테라스 · 독채',            host: '해원',   loc: '제주 서귀포',   detailId: 4 },
+  { name: '숲속 로그 하우스',      price: 320000, rating: 5.00, reviews:  52, img:  3, desc: '자연 속 · 바베큐 · 3베드룸',         host: '현수',   loc: '강원 평창',     detailId: 3 },
+  { name: '감성 아파트 — 성수',    price: 112000, rating: 4.85, reviews: 203, img:  4, desc: '성수동 · 감성 인테리어 · 2인',       host: '서연',   loc: '서울 성동구',   detailId: 5 },
+  { name: '전통 한옥 스테이',      price: 165000, rating: 4.93, reviews: 118, img:  5, desc: '전주 한옥마을 · 전통 경험 · 4인',    host: '민준',   loc: '전북 전주',     detailId: 1 },
+  { name: '오션뷰 풀빌라',         price: 245000, rating: 4.76, reviews:  89, img:  6, desc: '해운대 · 수영장 · 3베드룸',          host: '유진',   loc: '부산 해운대',   detailId: 2 },
+  { name: '북촌 게스트하우스',     price:  89000, rating: 4.82, reviews: 156, img:  7, desc: '경복궁 인근 · 한옥 분위기 · 2인',   host: '재원',   loc: '서울 종로구',   detailId: 1 },
+  { name: '강남 럭셔리 스위트',    price: 380000, rating: 4.95, reviews:  74, img:  8, desc: '강남구 · 고층 뷰 · 2베드룸',         host: '수빈',   loc: '서울 강남구',   detailId: 6 },
+  { name: '여의도 리버뷰',         price: 215000, rating: 4.88, reviews:  63, img:  9, desc: '한강 뷰 · 넓은 거실 · 2인',          host: '하은',   loc: '서울 영등포구', detailId: 6 },
+  { name: '홍대 아티스트 스튜디오',price:  98000, rating: 4.79, reviews: 221, img: 10, desc: '홍대 · 아트 감성 · 1인',             host: '태현',   loc: '서울 마포구',   detailId: 5 },
+  { name: '잠실 스카이 레지던스',  price: 295000, rating: 4.89, reviews: 112, img: 11, desc: '잠실 · 롯데타워 뷰 · 2베드룸',       host: '가을',   loc: '서울 송파구',   detailId: 2 },
+];
+
+/* ── CALENDAR ── */
+let calY = new Date().getFullYear();
+let calM = new Date().getMonth();
+let dateStart = null, dateEnd = null;
+
+const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const DAYS   = ['일','월','화','수','목','금','토'];
+
+function renderCal() {
+  document.getElementById('calBody').innerHTML = renderMonth(calY, calM);
+  syncDateChip();
+}
+
+function renderMonth(y, m) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const first = new Date(y, m, 1).getDay();
+  const total = new Date(y, m + 1, 0).getDate();
+  const hasRange = dateStart && dateEnd;
+
+  let h = `<div class="cal-month">`;
+  h += `<div class="cal-m-title">${y}년 ${MONTHS[m]}</div>`;
+  h += `<div class="cal-hdr">${DAYS.map(d => `<span>${d}</span>`).join('')}</div>`;
+  h += `<div class="cal-grid">`;
+  for (let i = 0; i < first; i++) h += `<div class="cal-cell empty"></div>`;
+
+  for (let d = 1; d <= total; d++) {
+    const dt = new Date(y, m, d); dt.setHours(0,0,0,0);
+    const ts = dt.getTime();
+    const isStart = dateStart && ts === dateStart.getTime();
+    const isEnd   = dateEnd   && ts === dateEnd.getTime();
+    const inRange = hasRange  && dt > dateStart && dt < dateEnd;
+    const isPast  = dt < today;
+    const dow = dt.getDay();
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+    let c = 'cal-cell';
+    if (isPast)  c += ' past';
+    if (dt.getTime() === today.getTime()) c += ' today';
+    if (isStart) c += ' sel-start' + (hasRange ? ' rng-on' : '');
+    if (isEnd)   c += ' sel-end rng-on';
+    if (inRange) c += ' in-range';
+
+    h += `<div class="${c}" ${isPast ? '' : `onclick="pickDate('${ds}')"`}>${d}</div>`;
+  }
+  h += `</div></div>`;
+  return h;
+}
+
+function pickDate(ds) {
+  const dt = new Date(ds); dt.setHours(0,0,0,0);
+  if (!dateStart || (dateStart && dateEnd)) {
+    dateStart = dt; dateEnd = null;
+  } else if (dt < dateStart) {
+    dateEnd = dateStart; dateStart = dt;
+  } else if (dt.getTime() === dateStart.getTime()) {
+    dateStart = null;
+  } else {
+    dateEnd = dt;
+  }
+  renderCal();
+}
+
+function clearDates() { dateStart = null; dateEnd = null; renderCal(); }
+function moveCal(d) {
+  calM += d;
+  if (calM < 0)  { calM = 11; calY--; }
+  if (calM > 11) { calM = 0;  calY++; }
+  renderCal();
+}
+function fmtD(d) { return `${d.getMonth()+1}월 ${d.getDate()}일`; }
+function syncDateChip() {
+  const el = document.getElementById('dateVal');
+  const chip = document.getElementById('dateChip');
+  if (dateStart && dateEnd) {
+    el.textContent = `${fmtD(dateStart)} – ${fmtD(dateEnd)}`;
+    chip.classList.add('has-val');
+  } else if (dateStart) {
+    el.textContent = `${fmtD(dateStart)} –`;
+    chip.classList.add('has-val');
+  } else {
+    el.textContent = '날짜 추가';
+    chip.classList.remove('has-val');
+  }
+}
+
+function openCal()  { document.getElementById('calOvl').classList.add('on'); document.getElementById('calSheet').classList.add('on'); renderCal(); }
+function closeCal() { document.getElementById('calOvl').classList.remove('on'); document.getElementById('calSheet').classList.remove('on'); }
+
+/* ── GUESTS ── */
+const G = { adults: 1, children: 0, infants: 0 };
+const G_DEF = [
+  { k: 'adults',   lbl: '성인',   sub: '만 13세 이상', min: 1 },
+  { k: 'children', lbl: '어린이', sub: '2~12세',       min: 0 },
+  { k: 'infants',  lbl: '유아',   sub: '2세 미만',     min: 0 },
+];
+
+function renderGuests() {
+  document.getElementById('guestBody').innerHTML = G_DEF.map(g => `
+    <div class="g-row">
+      <div><div class="g-type">${g.lbl}</div><div class="g-sub">${g.sub}</div></div>
+      <div class="g-ctrl">
+        <button onclick="adj('${g.k}',-1)" ${G[g.k] <= g.min ? 'disabled' : ''}>−</button>
+        <span class="g-num" id="gn_${g.k}">${G[g.k]}</span>
+        <button onclick="adj('${g.k}',1)">+</button>
+      </div>
+    </div>`).join('');
+}
+
+function adj(k, d) {
+  const mn = G_DEF.find(g => g.k === k).min;
+  G[k] = Math.max(mn, G[k] + d);
+  renderGuests();
+}
+
+function syncGuestChip() {
+  let parts = [`성인 ${G.adults}`];
+  if (G.children) parts.push(`어린이 ${G.children}`);
+  if (G.infants)  parts.push(`유아 ${G.infants}`);
+  document.getElementById('guestVal').textContent = parts.join(', ');
+}
+
+function openGuests()  { renderGuests(); document.getElementById('guestOvl').classList.add('on'); document.getElementById('guestSheet').classList.add('on'); }
+function closeGuests() { document.getElementById('guestOvl').classList.remove('on'); document.getElementById('guestSheet').classList.remove('on'); syncGuestChip(); }
+
+/* ── SEARCH ── */
+let lastQ = '';
+
+function runSearch() {
+  const q = document.getElementById('destInput').value.trim();
+  if (!q) { document.getElementById('destInput').focus(); return; }
+  lastQ = q;
+
+  const picked = [...STAYS].sort(() => Math.random() - .5).slice(0, 10);
+
+  document.getElementById('resultsList').innerHTML = picked.map(s => `
+    <div class="result-card" onclick="location.href='detail.html?id=${s.detailId}'" style="cursor:pointer">
+      <img class="result-img" src="${IMGS[s.img]}" alt="${s.name}" loading="lazy" />
+      <div class="result-info">
+        <div>
+          <div class="result-name">${s.name}</div>
+          <div class="result-loc">📍 ${s.loc}</div>
+          <div class="result-host">호스트: ${s.host}</div>
+          <div class="result-desc">${s.desc}</div>
+        </div>
+        <div class="result-foot">
+          <div class="result-stars">⭐ ${s.rating} (${s.reviews})</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="result-price">₩${s.price.toLocaleString()} <span>/ 박</span></div>
+            <span style="font-size:12px;color:#E8A020;font-weight:700">→</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('resultsMeta').textContent = `"${q}" 검색 결과 ${picked.length}개`;
+  document.getElementById('resultsWrap').style.display = 'block';
+  document.getElementById('mapFab').classList.add('on');
+
+  // 컴팩트 바 내용 업데이트 후 접기
+  document.getElementById('compactDest').textContent = q;
+  const dateText = document.getElementById('dateVal').textContent;
+  const guestText = document.getElementById('guestVal').textContent;
+  document.getElementById('compactMeta').textContent = `${dateText} · ${guestText}`;
+  document.getElementById('srchHeader').classList.add('collapsed');
+
+  document.getElementById('resultsWrap').scrollIntoView({ behavior: 'smooth' });
+}
+
+function expandSearch() {
+  expandedAt = Date.now();
+  document.getElementById('srchHeader').classList.remove('collapsed');
+  setTimeout(() => document.getElementById('destInput').focus(), 320);
+}
+
+function goToMap() { location.href = `map.html?q=${encodeURIComponent(lastQ)}`; }
+
+let expandedAt = 0;
+let lastScrollY = window.scrollY;
+
+function collapseIfExpanded() {
+  const hdr = document.getElementById('srchHeader');
+  if (lastQ && !hdr.classList.contains('collapsed')) {
+    hdr.classList.add('collapsed');
+    document.activeElement?.blur();
+  }
+}
+
+/* ── INIT ── */
+syncGuestChip();
+document.getElementById('destInput').addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
+
+// 아래로 스크롤할 때만 접기 (펼친 직후 400ms 이내 무시)
+window.addEventListener('scroll', () => {
+  const currentY = window.scrollY;
+  const scrolledDown = currentY > lastScrollY + 4;
+  lastScrollY = currentY;
+  if (scrolledDown && Date.now() - expandedAt > 400) {
+    collapseIfExpanded();
+  }
+}, { passive: true });
+
+// 검색창 바깥 탭 시 접기
+document.addEventListener('pointerdown', e => {
+  if (!document.getElementById('srchHeader').contains(e.target)) {
+    collapseIfExpanded();
+  }
+});
+</script>
+</body>
+</html>
