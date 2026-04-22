@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
   <link rel="manifest" href="/airbnb-renewal/manifest.json">
   <meta name="theme-color" content="#E8A020">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -73,7 +73,7 @@
     .profile-card {
       background: var(--card-bg);
       border-bottom: 1px solid var(--card-border);
-      padding: 56px 20px 22px;
+      padding: calc(env(safe-area-inset-top, 0px) + 18px) 20px 22px;
       position: relative;
     }
 

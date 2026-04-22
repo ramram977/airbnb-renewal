@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
   <link rel="manifest" href="/airbnb-renewal/manifest.json">
   <meta name="theme-color" content="#E8A020">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,7 +40,7 @@
       top: 0;
       z-index: 100;
       background: var(--surface);
-      padding: 54px 20px 14px;
+      padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 14px;
       border-bottom: 1px solid var(--border);
     }
 
