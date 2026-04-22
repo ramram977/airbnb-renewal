@@ -88,3 +88,11 @@ window.addEventListener('storage', e => {
 document.addEventListener('DOMContentLoaded', () => {
   FontSizeManager.apply();
 });
+
+// ── 7. PWA 서비스워커 등록 ────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/airbnb-renewal/sw.js')
+      .catch(() => {}); // 로컬 개발 환경에서는 무시
+  });
+}

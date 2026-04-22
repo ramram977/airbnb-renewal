@@ -1,0 +1,40 @@
+{
+  "name": "에어비앤비 리뉴얼",
+  "short_name": "스테이",
+  "description": "감성 숙소 예약 서비스",
+  "start_url": "/airbnb-renewal/",
+  "scope": "/airbnb-renewal/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FEFCF7",
+  "theme_color": "#E8A020",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/airbnb-renewal/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/airbnb-renewal/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/airbnb-renewal/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/airbnb-renewal/rooms/room6.jpg",
+      "sizes": "800x600",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
+    }
+  ]
+}
