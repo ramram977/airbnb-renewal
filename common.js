@@ -96,3 +96,58 @@ if ('serviceWorker' in navigator) {
       .catch(() => {}); // 로컬 개발 환경에서는 무시
   });
 }
+
+// ── 8. PWA 안전 영역 CSS 주입 (Galaxy / iPhone 노치 대응) ──────────────
+(function () {
+  const style = document.createElement('style');
+  style.textContent = `
+    /* ── 공통: html/body 배경색 통일 (상하단 여백 색상 일치) ── */
+    html { background: #F5F4F1; }
+    html[data-theme="dark"] { background: #141414; }
+
+    /* ── PWA standalone 전용 오버라이드 ── */
+    @media (display-mode: standalone) {
+
+      /* 상단 헤더: safe-area + 작은 여백만 */
+      .header,
+      .srch-header,
+      .msg-header,
+      .chat-header,
+      .detail-header,
+      .book-header,
+      .profile-header {
+        padding-top: calc(env(safe-area-inset-top, 20px) + 8px) !important;
+      }
+
+      /* 지도 검색바 위치 */
+      .map-search {
+        top: calc(env(safe-area-inset-top, 20px) + 8px) !important;
+      }
+
+      /* 하단 내비게이션: 제스처 바 여백 */
+      .bottom-nav {
+        height: auto !important;
+        min-height: 56px !important;
+        padding-top: 8px !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+        align-items: flex-start !important;
+      }
+
+      /* 예약/상세 하단 고정 바 */
+      .bottom-bar {
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 14px) !important;
+      }
+
+      /* 채팅 입력창 */
+      .input-bar {
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+      }
+
+      /* 본문 하단 여백 (하단 내비 높이 + 제스처 바) */
+      body {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+})();
