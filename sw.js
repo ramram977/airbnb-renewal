@@ -1,4 +1,4 @@
-const CACHE = 'stay-v13';
+const CACHE = 'stay-v14';
 
 const ASSETS = [
   '/airbnb-renewal/',
@@ -12,6 +12,14 @@ const ASSETS = [
   '/airbnb-renewal/profile.html',
   '/airbnb-renewal/common.js',
   '/airbnb-renewal/manifest.json',
+  '/airbnb-renewal/data/rooms.json',
+  '/airbnb-renewal/data/amenities.json',
+  '/airbnb-renewal/data/reviews.json',
+  '/airbnb-renewal/data/keywords.json',
+  '/airbnb-renewal/data/rules.json',
+  '/airbnb-renewal/data/search_listings.json',
+  '/airbnb-renewal/data/conversations.json',
+  '/airbnb-renewal/data/messages.json',
   '/airbnb-renewal/icons/icon-192.png',
   '/airbnb-renewal/icons/icon-512.png',
   '/airbnb-renewal/rooms/room1.jpg',

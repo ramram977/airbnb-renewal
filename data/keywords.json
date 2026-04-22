@@ -1,0 +1,43 @@
+[
+  { "id": 1,  "room_id": 1, "keyword": "감성 숙소" },
+  { "id": 2,  "room_id": 1, "keyword": "전통 체험" },
+  { "id": 3,  "room_id": 1, "keyword": "포토스팟" },
+  { "id": 4,  "room_id": 1, "keyword": "조용한 숙소" },
+  { "id": 5,  "room_id": 1, "keyword": "도보 관광" },
+  { "id": 6,  "room_id": 1, "keyword": "한옥 체험" },
+
+  { "id": 7,  "room_id": 2, "keyword": "경치가 좋음" },
+  { "id": 8,  "room_id": 2, "keyword": "편안한 숙소" },
+  { "id": 9,  "room_id": 2, "keyword": "교통 편리" },
+  { "id": 10, "room_id": 2, "keyword": "도시 숙소" },
+  { "id": 11, "room_id": 2, "keyword": "오션뷰" },
+  { "id": 12, "room_id": 2, "keyword": "주차 가능" },
+
+  { "id": 13, "room_id": 3, "keyword": "한적한 숙소" },
+  { "id": 14, "room_id": 3, "keyword": "자연 속" },
+  { "id": 15, "room_id": 3, "keyword": "힐링" },
+  { "id": 16, "room_id": 3, "keyword": "조용한 숙소" },
+  { "id": 17, "room_id": 3, "keyword": "반려동물 환영" },
+  { "id": 18, "room_id": 3, "keyword": "바베큐 가능" },
+
+  { "id": 19, "room_id": 4, "keyword": "힐링" },
+  { "id": 20, "room_id": 4, "keyword": "자연 속" },
+  { "id": 21, "room_id": 4, "keyword": "경치가 좋음" },
+  { "id": 22, "room_id": 4, "keyword": "한적한 숙소" },
+  { "id": 23, "room_id": 4, "keyword": "커플 추천" },
+  { "id": 24, "room_id": 4, "keyword": "테라스" },
+
+  { "id": 25, "room_id": 5, "keyword": "감성 숙소" },
+  { "id": 26, "room_id": 5, "keyword": "도시 숙소" },
+  { "id": 27, "room_id": 5, "keyword": "교통 편리" },
+  { "id": 28, "room_id": 5, "keyword": "포토스팟" },
+  { "id": 29, "room_id": 5, "keyword": "트렌디" },
+  { "id": 30, "room_id": 5, "keyword": "성수동" },
+
+  { "id": 31, "room_id": 6, "keyword": "경치가 좋음" },
+  { "id": 32, "room_id": 6, "keyword": "편안한 숙소" },
+  { "id": 33, "room_id": 6, "keyword": "도시 숙소" },
+  { "id": 34, "room_id": 6, "keyword": "교통 편리" },
+  { "id": 35, "room_id": 6, "keyword": "한강뷰" },
+  { "id": 36, "room_id": 6, "keyword": "비즈니스" }
+]

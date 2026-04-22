@@ -457,10 +457,68 @@
 
 <script>
 /* ════════════════════════════════════
-   DATA
+   DATA — data/ 폴더의 JSON 파일에서 로드
+   ※ SQL 개념 대응:
+      rooms.json        → rooms 테이블
+      amenities.json    → amenities 테이블  (room_id = FK)
+      reviews.json      → reviews 테이블   (room_id = FK)
+      keywords.json     → keywords 테이블  (room_id = FK)
+      rules.json        → rules 테이블     (room_id = FK)
 ════════════════════════════════════ */
-const DETAILS = {
+const params    = new URLSearchParams(location.search);
+const listingId = parseInt(params.get('id')) || 1;
 
+Promise.all([
+  fetch('data/rooms.json').then(r => r.json()),
+  fetch('data/amenities.json').then(r => r.json()),
+  fetch('data/reviews.json').then(r => r.json()),
+  fetch('data/keywords.json').then(r => r.json()),
+  fetch('data/rules.json').then(r => r.json()),
+]).then(([rooms, amenities, reviews, keywords, rules]) => {
+
+  // SQL: SELECT * FROM rooms WHERE id = listingId
+  const room = rooms.find(r => r.id === listingId) || rooms[0];
+
+  // SQL: SELECT * FROM amenities WHERE room_id = room.id  (등 각 테이블)
+  const d = {
+    name:       room.name,
+    sub:        room.sub,
+    img:        room.img,
+    price:      room.price,
+    rating:     room.rating,
+    reviews:    room.review_count,
+    superhost:  room.superhost,
+    capacity:   room.capacity,
+    type:       room.type,
+    keywords:   keywords.filter(k => k.room_id === room.id).map(k => k.keyword),
+    amenities:  amenities.filter(a => a.room_id === room.id),
+    fullDesc:   room.description,
+    host: {
+      name:      room.host_name,
+      avatar:    room.host_avatar,
+      color:     room.host_color,
+      stays:     room.host_stays,
+      years:     room.host_years,
+      superhost: room.host_superhost,
+      respRate:  room.host_resp_rate,
+      respTime:  room.host_resp_time,
+    },
+    address:     room.address,
+    locationSub: room.location_sub,
+    reviewList:  reviews.filter(r => r.room_id === room.id),
+    rules:       rules.filter(r => r.room_id === room.id),
+  };
+
+  renderDetail(d);
+});
+
+/* ════════════════════════════════════
+   RENDER
+════════════════════════════════════ */
+function renderDetail(d) {
+
+if (false) {
+const DETAILS = {
   1: {
     name: '감성 한옥 스테이',
     sub: '서울 종로구 북촌 · 한옥 독채 · 최대 4인',
@@ -676,14 +734,9 @@ const DETAILS = {
   },
 };
 
-/* ════════════════════════════════════
-   RENDER
-════════════════════════════════════ */
-const params   = new URLSearchParams(location.search);
-const listingId = parseInt(params.get('id')) || 1;
-const d = DETAILS[listingId] || DETAILS[1];
+} // end if(false) — 위 DETAILS 객체는 참고용 주석, 실제로는 JSON에서 로드됨
 
-document.title = `${d.name} — Airbnb`;
+  document.title = `${d.name} — Airbnb`;
 document.getElementById('heroImg').src = d.img;
 document.getElementById('heroImg').alt = d.name;
 
@@ -816,16 +869,18 @@ function toggleDesc() {
   document.getElementById('descBtn').classList.toggle('open', descOpen);
 }
 
-/* ── 위시리스트 ── */
-let wished = WishlistManager.has(listingId);
-function syncWish() {
-  document.getElementById('wishBtn').textContent = wished ? '❤️' : '🤍';
-}
-function toggleWish() {
-  wished = WishlistManager.toggle(listingId);
+  /* ── 위시리스트 ── */
+  let wished = WishlistManager.has(listingId);
+  function syncWish() {
+    document.getElementById('wishBtn').textContent = wished ? '❤️' : '🤍';
+  }
+  function toggleWish() {
+    wished = WishlistManager.toggle(listingId);
+    syncWish();
+  }
   syncWish();
-}
-syncWish();
+
+} // end renderDetail()
 </script>
 </body>
 </html>

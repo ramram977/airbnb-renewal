@@ -1,0 +1,33 @@
+[
+  { "id": 1,  "conversation_id": 1, "from": "them", "text": "안녕하세요! 예약해 주셔서 감사합니다 😊",                            "time": "오전 10:05", "date": "2025년 5월 2일" },
+  { "id": 2,  "conversation_id": 1, "from": "them", "text": "체크인 관련해서 안내드릴게요.",                                        "time": "오전 10:05", "date": null },
+  { "id": 3,  "conversation_id": 1, "from": "me",   "text": "안녕하세요! 잘 부탁드립니다 🙏",                                       "time": "오전 10:12", "date": null },
+  { "id": 4,  "conversation_id": 1, "from": "me",   "text": "혹시 주차 가능한가요?",                                                "time": "오전 10:13", "date": null },
+  { "id": 5,  "conversation_id": 1, "from": "them", "text": "네, 숙소 바로 앞 골목에 주차 가능합니다! 한 대만 가능해요.",            "time": "오전 10:20", "date": null },
+  { "id": 6,  "conversation_id": 1, "from": "me",   "text": "감사합니다 😊",                                                        "time": "오전 10:22", "date": null },
+  { "id": 7,  "conversation_id": 1, "from": "them", "text": "체크인 시간은 오후 3시부터 가능합니다 😊",                             "time": "방금",       "date": "오늘" },
+
+  { "id": 8,  "conversation_id": 2, "from": "them", "text": "예약 확인되었습니다! 부산에서의 즐거운 여행 기대해 주세요 🌊",         "time": "오후 2:30", "date": "2025년 5월 1일" },
+  { "id": 9,  "conversation_id": 2, "from": "me",   "text": "감사합니다! 오션뷰가 정말 기대되네요.",                                 "time": "오후 3:01", "date": null },
+  { "id": 10, "conversation_id": 2, "from": "me",   "text": "혹시 주차 공간이 있을까요?",                                           "time": "오후 3:02", "date": null },
+  { "id": 11, "conversation_id": 2, "from": "them", "text": "네, 주차 공간은 1대 가능합니다!",                                       "time": "오후 3:15", "date": null },
+
+  { "id": 12, "conversation_id": 3, "from": "them", "text": "안녕하세요, 호스트님! 예약 감사해요.",                                  "time": "오전 9:00", "date": "오늘" },
+  { "id": 13, "conversation_id": 3, "from": "me",   "text": "안녕하세요! 환영합니다 😊",                                            "time": "오전 9:05", "date": null },
+  { "id": 14, "conversation_id": 3, "from": "me",   "text": "제주에서의 여행이 즐거우시길 바랍니다!",                                "time": "오전 9:05", "date": null },
+  { "id": 15, "conversation_id": 3, "from": "them", "text": "혹시 조식 제공되나요? 아침 일찍 도착할 것 같아서요.",                   "time": "오전 9:10", "date": null },
+
+  { "id": 16, "conversation_id": 4, "from": "them", "text": "가평 카빈에 오신 것을 환영합니다! 🌲",                                 "time": "오전 11:00", "date": "4월 24일" },
+  { "id": 17, "conversation_id": 4, "from": "me",   "text": "와 기대돼요!",                                                         "time": "오전 11:15", "date": null },
+  { "id": 18, "conversation_id": 4, "from": "them", "text": "근처에 닭갈비 맛집을 알려드릴게요 😄",                                  "time": "오전 11:20", "date": null },
+  { "id": 19, "conversation_id": 4, "from": "me",   "text": "감사합니다!",                                                          "time": "오전 11:25", "date": null },
+  { "id": 20, "conversation_id": 4, "from": "them", "text": "좋은 여행 되세요! 체크아웃 후 리뷰 남겨주시면 감사하겠습니다.",         "time": "오후 1:30",  "date": "4월 27일" },
+
+  { "id": 21, "conversation_id": 5, "from": "them", "text": "호스트님 정말 친절하게 안내해 주셨어요 🙏",                            "time": "오후 4:00", "date": "4월 20일" },
+  { "id": 22, "conversation_id": 5, "from": "me",   "text": "즐거운 시간 되셨다니 다행이에요!",                                      "time": "오후 4:10", "date": null },
+  { "id": 23, "conversation_id": 5, "from": "them", "text": "정말 좋은 숙소였어요. 5점 드렸습니다 ⭐",                              "time": "오후 4:12", "date": null },
+  { "id": 24, "conversation_id": 5, "from": "me",   "text": "감사합니다! 다음에 또 오세요 😊",                                      "time": "오후 4:20", "date": null },
+
+  { "id": 25, "conversation_id": 6, "from": "them", "text": "안녕하세요! Airbnb 고객지원입니다.",                                    "time": "오전 9:00", "date": "4월 17일" },
+  { "id": 26, "conversation_id": 6, "from": "them", "text": "무엇을 도와드릴까요?",                                                  "time": "오전 9:00", "date": null }
+]

@@ -468,112 +468,44 @@
   </div>
 
 <script>
-/* avatarColor: 단색 hex */
-const CONVERSATIONS = {
-  1: {
-    name: '지은 · 호스트',
-    avatar: '지',
-    avatarColor: '#F8DFA0',
-    online: true,
-    stay: '감성 한옥 스테이 · 서울',
-    stayDates: '5월 10일 – 13일',
-    thumbBg: '#FFF5D6',
-    messages: [
-      { from: 'them', text: '안녕하세요! 예약해 주셔서 감사합니다 😊', time: '오전 10:05', date: '2025년 5월 2일' },
-      { from: 'them', text: '체크인 관련해서 안내드릴게요.', time: '오전 10:05' },
-      { from: 'me',   text: '안녕하세요! 잘 부탁드립니다 🙏', time: '오전 10:12' },
-      { from: 'me',   text: '혹시 주차 가능한가요?', time: '오전 10:13' },
-      { from: 'them', text: '네, 숙소 바로 앞 골목에 주차 가능합니다! 한 대만 가능해요.', time: '오전 10:20' },
-      { from: 'me',   text: '감사합니다 😊', time: '오전 10:22' },
-      { from: 'them', text: '체크인 시간은 오후 3시부터 가능합니다 😊', time: '방금', date: '오늘' },
-    ],
-  },
-  2: {
-    name: '민준 · 호스트',
-    avatar: '민',
-    avatarColor: '#F8D0A8',
-    online: false,
-    stay: '오션뷰 모던 아파트 · 부산',
-    stayDates: '6월 1일 – 3일',
-    thumbBg: '#FFF0E6',
-    messages: [
-      { from: 'them', text: '예약 확인되었습니다! 부산에서의 즐거운 여행 기대해 주세요 🌊', time: '오후 2:30', date: '2025년 5월 1일' },
-      { from: 'me',   text: '감사합니다! 오션뷰가 정말 기대되네요.', time: '오후 3:01' },
-      { from: 'me',   text: '혹시 주차 공간이 있을까요?', time: '오후 3:02' },
-      { from: 'them', text: '네, 주차 공간은 1대 가능합니다!', time: '오후 3:15' },
-    ],
-  },
-  3: {
-    name: '서연 · 게스트',
-    avatar: '서',
-    avatarColor: '#FAE8B0',
-    online: true,
-    stay: '내 숙소 · 제주시',
-    stayDates: '5월 20일 – 22일',
-    thumbBg: '#FFF8E0',
-    messages: [
-      { from: 'them', text: '안녕하세요, 호스트님! 예약 감사해요.', time: '오전 9:00', date: '오늘' },
-      { from: 'me',   text: '안녕하세요! 환영합니다 😊', time: '오전 9:05' },
-      { from: 'me',   text: '제주에서의 여행이 즐거우시길 바랍니다!', time: '오전 9:05' },
-      { from: 'them', text: '혹시 조식 제공되나요? 아침 일찍 도착할 것 같아서요.', time: '오전 9:10' },
-    ],
-  },
-  4: {
-    name: '하준 · 호스트',
-    avatar: '하',
-    avatarColor: '#F8CEAC',
-    online: false,
-    stay: '숲속 통나무 카빈 · 가평',
-    stayDates: '4월 25일 – 27일',
-    thumbBg: '#FFF3E6',
-    messages: [
-      { from: 'them', text: '가평 카빈에 오신 것을 환영합니다! 🌲', time: '오전 11:00', date: '4월 24일' },
-      { from: 'me',   text: '와 기대돼요!', time: '오전 11:15' },
-      { from: 'them', text: '근처에 닭갈비 맛집을 알려드릴게요 😄', time: '오전 11:20' },
-      { from: 'me',   text: '감사합니다!', time: '오전 11:25' },
-      { from: 'them', text: '좋은 여행 되세요! 체크아웃 후 리뷰 남겨주시면 감사하겠습니다.', time: '오후 1:30', date: '4월 27일' },
-    ],
-  },
-  5: {
-    name: '예진 · 게스트',
-    avatar: '예',
-    avatarColor: '#FBF0C0',
-    online: false,
-    stay: '내 숙소 · 강릉',
-    stayDates: '4월 18일 – 20일',
-    thumbBg: '#FFFAE6',
-    messages: [
-      { from: 'them', text: '호스트님 정말 친절하게 안내해 주셨어요 🙏', time: '오후 4:00', date: '4월 20일' },
-      { from: 'me',   text: '즐거운 시간 되셨다니 다행이에요!', time: '오후 4:10' },
-      { from: 'them', text: '정말 좋은 숙소였어요. 5점 드렸습니다 ⭐', time: '오후 4:12' },
-      { from: 'me',   text: '감사합니다! 다음에 또 오세요 😊', time: '오후 4:20' },
-    ],
-  },
-  6: {
-    name: 'Airbnb 고객지원',
-    avatar: '🏠',
-    avatarColor: '#F9CEAE',
-    online: true,
-    stay: '공식 지원팀',
-    stayDates: '',
-    thumbBg: '#FFF0E8',
-    messages: [
-      { from: 'them', text: '안녕하세요! Airbnb 고객지원입니다.', time: '오전 9:00', date: '4월 17일' },
-      { from: 'them', text: '무엇을 도와드릴까요?', time: '오전 9:00' },
-    ],
-  },
-};
-
-// ── Init ──────────────────────────────────────────────
+/* ── DATA — data/conversations.json + data/messages.json 에서 로드
+   SQL:
+     SELECT * FROM conversations WHERE id = ?
+     SELECT * FROM messages WHERE conversation_id = ?  ── */
 const params = new URLSearchParams(location.search);
 const convId = parseInt(params.get('id')) || 1;
-const conv = CONVERSATIONS[convId] || CONVERSATIONS[1];
 
-document.getElementById('chatHostName').textContent = conv.name;
-document.getElementById('chatHostMeta').textContent = conv.stay;
-const avatarEl = document.getElementById('chatHeaderAvatar');
-avatarEl.textContent = conv.avatar;
-avatarEl.style.background = conv.avatarColor;
+let conv = {};
+Promise.all([
+  fetch('data/conversations.json').then(r => r.json()),
+  fetch('data/messages.json').then(r => r.json()),
+]).then(([conversations, messages]) => {
+  // SQL: SELECT * FROM conversations WHERE id = convId
+  const c = conversations.find(c => c.id === convId) || conversations[0];
+  // SQL: SELECT * FROM messages WHERE conversation_id = convId ORDER BY id
+  const msgs = messages
+    .filter(m => m.conversation_id === c.id)
+    .map(m => ({ from: m.from, text: m.text, time: m.time, date: m.date || undefined }));
+
+  conv = {
+    id:          c.id,
+    name:        c.name,
+    avatar:      c.avatar,
+    avatarColor: c.avatar_color,
+    online:      c.online,
+    stay:        c.stay,
+    stayDates:   c.stay_dates,
+    thumbBg:     c.thumb_bg,
+    messages:    msgs,
+  };
+
+  document.getElementById('chatHostName').textContent = conv.name;
+  document.getElementById('chatHostMeta').textContent = conv.stay;
+  const avatarEl = document.getElementById('chatHeaderAvatar');
+  avatarEl.textContent = conv.avatar;
+  avatarEl.style.background = conv.avatarColor;
+  renderMessages(conv.messages);
+});
 
 // ── Render messages ───────────────────────────────────
 const container = document.getElementById('chatMessages');

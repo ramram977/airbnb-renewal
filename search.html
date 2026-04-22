@@ -547,39 +547,25 @@
 </div>
 
 <script>
-/* ── DATA ── */
-const IMGS = [
-  'rooms/room1.jpg',
-  'rooms/room2.jpg',
-  'rooms/room3.jpg',
-  'rooms/room4.jpg',
-  'rooms/room5.jpg',
-  'rooms/room6.jpg',
-  'rooms/room7.jpg',
-  'rooms/room8.jpg',
-  'rooms/room9.jpg',
-  'rooms/room10.jpg',
-  'rooms/room11.jpg',
-  'rooms/room12.jpg',
-  'rooms/room13.jpg',
-  'rooms/room14.jpg',
-  'rooms/room15.jpg',
-];
-
-const STAYS = [
-  { name: '스위스 마운틴 샬레',    price: 285000, rating: 4.98, reviews: 237, img:  0, desc: '알프스 뷰 · 통나무집 · 2베드룸',     host: '소피아', loc: '인터라켄',      detailId: 3 },
-  { name: '미니멀 모던 스튜디오',  price: 142000, rating: 4.92, reviews: 184, img:  1, desc: '도심 뷰 · 모던 인테리어 · 1베드룸',  host: '지민',   loc: '서울 성수',     detailId: 5 },
-  { name: '제주 힐링 스테이',      price: 198000, rating: 4.87, reviews:  96, img:  2, desc: '바다 뷰 · 테라스 · 독채',            host: '해원',   loc: '제주 서귀포',   detailId: 4 },
-  { name: '숲속 로그 하우스',      price: 320000, rating: 5.00, reviews:  52, img:  3, desc: '자연 속 · 바베큐 · 3베드룸',         host: '현수',   loc: '강원 평창',     detailId: 3 },
-  { name: '감성 아파트 — 성수',    price: 112000, rating: 4.85, reviews: 203, img:  4, desc: '성수동 · 감성 인테리어 · 2인',       host: '서연',   loc: '서울 성동구',   detailId: 5 },
-  { name: '전통 한옥 스테이',      price: 165000, rating: 4.93, reviews: 118, img:  5, desc: '전주 한옥마을 · 전통 경험 · 4인',    host: '민준',   loc: '전북 전주',     detailId: 1 },
-  { name: '오션뷰 풀빌라',         price: 245000, rating: 4.76, reviews:  89, img:  6, desc: '해운대 · 수영장 · 3베드룸',          host: '유진',   loc: '부산 해운대',   detailId: 2 },
-  { name: '북촌 게스트하우스',     price:  89000, rating: 4.82, reviews: 156, img:  7, desc: '경복궁 인근 · 한옥 분위기 · 2인',   host: '재원',   loc: '서울 종로구',   detailId: 1 },
-  { name: '강남 럭셔리 스위트',    price: 380000, rating: 4.95, reviews:  74, img:  8, desc: '강남구 · 고층 뷰 · 2베드룸',         host: '수빈',   loc: '서울 강남구',   detailId: 6 },
-  { name: '여의도 리버뷰',         price: 215000, rating: 4.88, reviews:  63, img:  9, desc: '한강 뷰 · 넓은 거실 · 2인',          host: '하은',   loc: '서울 영등포구', detailId: 6 },
-  { name: '홍대 아티스트 스튜디오',price:  98000, rating: 4.79, reviews: 221, img: 10, desc: '홍대 · 아트 감성 · 1인',             host: '태현',   loc: '서울 마포구',   detailId: 5 },
-  { name: '잠실 스카이 레지던스',  price: 295000, rating: 4.89, reviews: 112, img: 11, desc: '잠실 · 롯데타워 뷰 · 2베드룸',       host: '가을',   loc: '서울 송파구',   detailId: 2 },
-];
+/* ── DATA — data/search_listings.json 에서 로드
+   SQL: SELECT * FROM search_listings
+   room_id 컬럼 → rooms 테이블의 id 참조 (FK) ── */
+let STAYS = [];
+fetch('data/search_listings.json')
+  .then(r => r.json())
+  .then(data => {
+    STAYS = data.map(s => ({
+      name:     s.name,
+      price:    s.price,
+      rating:   s.rating,
+      reviews:  s.review_count,
+      img:      s.img,
+      desc:     s.desc,
+      host:     s.host,
+      loc:      s.location,
+      detailId: s.room_id,
+    }));
+  });
 
 /* ── CALENDAR ── */
 let calY = new Date().getFullYear();

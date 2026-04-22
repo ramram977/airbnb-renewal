@@ -1,0 +1,14 @@
+[
+  { "id": 1,  "name": "스위스 마운틴 샬레",     "price": 285000, "rating": 4.98, "review_count": 237, "img": "rooms/room1.jpg",  "desc": "알프스 뷰 · 통나무집 · 2베드룸",    "host": "소피아", "location": "인터라켄",      "room_id": 3 },
+  { "id": 2,  "name": "미니멀 모던 스튜디오",   "price": 142000, "rating": 4.92, "review_count": 184, "img": "rooms/room2.jpg",  "desc": "도심 뷰 · 모던 인테리어 · 1베드룸", "host": "지민",   "location": "서울 성수",     "room_id": 5 },
+  { "id": 3,  "name": "제주 힐링 스테이",       "price": 198000, "rating": 4.87, "review_count": 96,  "img": "rooms/room3.jpg",  "desc": "바다 뷰 · 테라스 · 독채",           "host": "해원",   "location": "제주 서귀포",   "room_id": 4 },
+  { "id": 4,  "name": "숲속 로그 하우스",       "price": 320000, "rating": 5.00, "review_count": 52,  "img": "rooms/room4.jpg",  "desc": "자연 속 · 바베큐 · 3베드룸",        "host": "현수",   "location": "강원 평창",     "room_id": 3 },
+  { "id": 5,  "name": "감성 아파트 — 성수",     "price": 112000, "rating": 4.85, "review_count": 203, "img": "rooms/room5.jpg",  "desc": "성수동 · 감성 인테리어 · 2인",      "host": "서연",   "location": "서울 성동구",   "room_id": 5 },
+  { "id": 6,  "name": "전통 한옥 스테이",       "price": 165000, "rating": 4.93, "review_count": 118, "img": "rooms/room6.jpg",  "desc": "전주 한옥마을 · 전통 경험 · 4인",   "host": "민준",   "location": "전북 전주",     "room_id": 1 },
+  { "id": 7,  "name": "오션뷰 풀빌라",          "price": 245000, "rating": 4.76, "review_count": 89,  "img": "rooms/room7.jpg",  "desc": "해운대 · 수영장 · 3베드룸",         "host": "유진",   "location": "부산 해운대",   "room_id": 2 },
+  { "id": 8,  "name": "북촌 게스트하우스",      "price": 89000,  "rating": 4.82, "review_count": 156, "img": "rooms/room8.jpg",  "desc": "경복궁 인근 · 한옥 분위기 · 2인",  "host": "재원",   "location": "서울 종로구",   "room_id": 1 },
+  { "id": 9,  "name": "강남 럭셔리 스위트",     "price": 380000, "rating": 4.95, "review_count": 74,  "img": "rooms/room9.jpg",  "desc": "강남구 · 고층 뷰 · 2베드룸",        "host": "수빈",   "location": "서울 강남구",   "room_id": 6 },
+  { "id": 10, "name": "여의도 리버뷰",          "price": 215000, "rating": 4.88, "review_count": 63,  "img": "rooms/room10.jpg", "desc": "한강 뷰 · 넓은 거실 · 2인",         "host": "하은",   "location": "서울 영등포구", "room_id": 6 },
+  { "id": 11, "name": "홍대 아티스트 스튜디오", "price": 98000,  "rating": 4.79, "review_count": 221, "img": "rooms/room11.jpg", "desc": "홍대 · 아트 감성 · 1인",            "host": "태현",   "location": "서울 마포구",   "room_id": 5 },
+  { "id": 12, "name": "잠실 스카이 레지던스",   "price": 295000, "rating": 4.89, "review_count": 112, "img": "rooms/room12.jpg", "desc": "잠실 · 롯데타워 뷰 · 2베드룸",      "host": "가을",   "location": "서울 송파구",   "room_id": 2 }
+]

@@ -594,32 +594,38 @@
 
 <script>
 /* ───────────────────────────────────────────
-   DATA (same set as detail.html)
+   DATA — data/rooms.json 에서 로드
+   SQL: SELECT * FROM rooms WHERE id = ?
 ─────────────────────────────────────────── */
-const LISTINGS = {
-  1: { name: '감성 한옥 스테이', type: '한옥 독채 · 서울 종로구', img: 'rooms/room6.jpg', price: 165000, rating: 4.93, reviews: 118, capacity: 4, cleaning: 30000 },
-  2: { name: '오션뷰 모던 아파트', type: '아파트 · 부산 해운대구', img: 'rooms/room7.jpg', price: 245000, rating: 4.88, reviews: 203, capacity: 4, cleaning: 45000 },
-  3: { name: '숲속 통나무 카빈', type: '독채 · 경기 가평군',    img: 'rooms/room4.jpg', price: 198000, rating: 4.97, reviews: 89,  capacity: 4, cleaning: 35000 },
-  4: { name: '제주 힐링 스테이', type: '독채 · 제주 서귀포시', img: 'rooms/room3.jpg', price: 185000, rating: 4.90, reviews: 76,  capacity: 2, cleaning: 30000 },
-  5: { name: '미니멀 모던 스튜디오', type: '스튜디오 · 서울 성수동', img: 'rooms/room2.jpg', price: 142000, rating: 4.85, reviews: 167, capacity: 2, cleaning: 25000 },
-  6: { name: '여의도 한강 리버뷰', type: '아파트 · 서울 영등포구', img: 'rooms/room5.jpg', price: 215000, rating: 4.91, reviews: 94,  capacity: 4, cleaning: 40000 },
-};
-
-/* ───────────────────────────────────────────
-   INIT
-─────────────────────────────────────────── */
-const params   = new URLSearchParams(location.search);
+const params    = new URLSearchParams(location.search);
 const listingId = parseInt(params.get('id')) || 1;
-const L = LISTINGS[listingId];
 
-// Render listing card
-document.getElementById('listingThumb').src = L.img;
-document.getElementById('listingThumb').alt = L.name;
-document.getElementById('listingType').textContent = L.type;
-document.getElementById('listingName').textContent = L.name;
-document.getElementById('listingRating').textContent = L.rating;
-document.getElementById('listingReviews').textContent = `후기 ${L.reviews}개`;
-document.getElementById('listingPrice').textContent = L.price.toLocaleString();
+let L = {}; // 로드 후 채워짐
+
+fetch('data/rooms.json')
+  .then(r => r.json())
+  .then(rooms => {
+    // SQL: SELECT * FROM rooms WHERE id = listingId
+    const room = rooms.find(r => r.id === listingId) || rooms[0];
+    L = {
+      name:     room.name,
+      type:     `${room.type} · ${room.location}`,
+      img:      room.img,
+      price:    room.price,
+      rating:   room.rating,
+      reviews:  room.review_count,
+      capacity: parseInt(room.capacity),
+      cleaning: room.cleaning_fee,
+    };
+    // Render listing card
+    document.getElementById('listingThumb').src = L.img;
+    document.getElementById('listingThumb').alt = L.name;
+    document.getElementById('listingType').textContent = L.type;
+    document.getElementById('listingName').textContent = L.name;
+    document.getElementById('listingRating').textContent = L.rating;
+    document.getElementById('listingReviews').textContent = `후기 ${L.reviews}개`;
+    document.getElementById('listingPrice').textContent = L.price.toLocaleString();
+  });
 
 /* ───────────────────────────────────────────
    CALENDAR STATE
