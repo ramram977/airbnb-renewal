@@ -159,6 +159,9 @@ if ('serviceWorker' in navigator) {
 (function () {
   const style = document.createElement('style');
   style.textContent = `
+    /* ── 터치 하이라이트 전역 제거 ── */
+    * { -webkit-tap-highlight-color: transparent; }
+
     /* ── 공통: html/body 배경색 통일 (상하단 여백 색상 일치) ── */
     html { background: #F5F4F1; }
     html[data-theme="dark"] { background: #141414; }
