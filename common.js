@@ -98,15 +98,11 @@ const MicroInteraction = {
       const card = e.target.closest('.card, .list-card');
       if (card) card.classList.add('_pressed');
 
-      const bar = e.target.closest('.search-bar, .srch-bar');
-      if (bar) bar.classList.add('_glow');
     }, { passive: true });
 
     const clearFeedback = () => {
       document.querySelectorAll('.card._pressed, .list-card._pressed')
         .forEach(c => c.classList.remove('_pressed'));
-      document.querySelectorAll('.search-bar._glow, .srch-bar._glow')
-        .forEach(b => b.classList.remove('_glow'));
     };
     document.addEventListener('pointercancel', clearFeedback, { passive: true });
   },
@@ -254,13 +250,6 @@ if ('serviceWorker' in navigator) {
       box-shadow: 0 1px 8px rgba(0,0,0,.07) !important;
     }
 
-    /* 검색바 — 포커스 글로우 */
-    .search-bar, .srch-bar {
-      transition: box-shadow 0.15s ease;
-    }
-    .search-bar._glow, .srch-bar._glow {
-      box-shadow: 0 0 0 3px rgba(232,160,32,.22), 0 2px 16px rgba(0,0,0,.10) !important;
-    }
   `;
   document.head.appendChild(style);
 
