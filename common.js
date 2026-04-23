@@ -120,8 +120,16 @@ const MicroInteraction = {
       e.stopImmediatePropagation(); // onclick 이 직접 실행되지 않도록 차단
       const dest = m[1];
 
-      // 효과가 눈에 보일 시간(170 ms) 만큼 대기 후 이동
-      setTimeout(() => { location.href = dest; }, 170);
+      const isCard = el.matches('.card, .list-card');
+      if (isCard) {
+        // _pressed 제거 → _bounce 재생 → 애니메이션 끝난 뒤 이동
+        el.classList.remove('_pressed');
+        void el.offsetWidth;
+        el.classList.add('_bounce');
+        el.addEventListener('animationend', () => { location.href = dest; }, { once: true });
+      } else {
+        setTimeout(() => { location.href = dest; }, 170);
+      }
     }, true /* capture */);
   },
 };
@@ -246,8 +254,18 @@ if ('serviceWorker' in navigator) {
       -webkit-tap-highlight-color: transparent;
     }
     .card._pressed {
-      transform: scale(0.97) !important;
+      transform: scale(0.985) !important;
       box-shadow: 0 1px 8px rgba(0,0,0,.07) !important;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    /* 눌림 해제 후 튀어오르는 스프링 복귀 */
+    @keyframes _card-bounce {
+      0%   { transform: scale(0.985); }
+      55%  { transform: scale(1.025); }
+      100% { transform: scale(1); }
+    }
+    .card._bounce {
+      animation: _card-bounce 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
   `;
