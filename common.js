@@ -77,8 +77,8 @@ const WishlistManager = {
 const MicroInteraction = {
   init() {
     this._pills();
-    this._searchBar();
     this._cards();
+    this._delayNav(); // 카드·검색바 클릭 시 효과가 보인 뒤에 이동
   },
 
   _pills() {
@@ -92,24 +92,41 @@ const MicroInteraction = {
     });
   },
 
-  _searchBar() {
-    document.querySelectorAll('.search-bar, .srch-bar').forEach(bar => {
-      bar.addEventListener('pointerdown', () => bar.classList.add('_glow'));
-      bar.addEventListener('pointerup',    () => bar.classList.remove('_glow'));
-      bar.addEventListener('pointerleave', () => bar.classList.remove('_glow'));
-    });
+  _cards() {
+    // pointerdown 에서 즉시 시각 피드백 (클릭 판정 전에 미리 보여줌)
+    document.addEventListener('pointerdown', e => {
+      const card = e.target.closest('.card, .list-card');
+      if (card) card.classList.add('_pressed');
+
+      const bar = e.target.closest('.search-bar, .srch-bar');
+      if (bar) bar.classList.add('_glow');
+    }, { passive: true });
+
+    const clearFeedback = () => {
+      document.querySelectorAll('.card._pressed, .list-card._pressed')
+        .forEach(c => c.classList.remove('_pressed'));
+      document.querySelectorAll('.search-bar._glow, .srch-bar._glow')
+        .forEach(b => b.classList.remove('_glow'));
+    };
+    document.addEventListener('pointercancel', clearFeedback, { passive: true });
   },
 
-  _cards() {
-    // 이벤트 위임 — 동적 렌더 카드도 처리
-    document.addEventListener('pointerdown', e => {
-      const card = e.target.closest('.card');
-      if (card) card.classList.add('_pressed');
-    }, { passive: true });
-    const clearPressed = () =>
-      document.querySelectorAll('.card._pressed').forEach(c => c.classList.remove('_pressed'));
-    document.addEventListener('pointerup',    clearPressed, { passive: true });
-    document.addEventListener('pointercancel', clearPressed, { passive: true });
+  _delayNav() {
+    // 캡처 단계에서 클릭을 가로채 — onclick 보다 먼저 실행
+    document.addEventListener('click', e => {
+      const el = e.target.closest('.card, .list-card, .search-bar, .srch-bar');
+      if (!el) return;
+
+      const fn = el.getAttribute('onclick') || '';
+      const m  = fn.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
+      if (!m) return;
+
+      e.stopImmediatePropagation(); // onclick 이 직접 실행되지 않도록 차단
+      const dest = m[1];
+
+      // 효과가 눈에 보일 시간(170 ms) 만큼 대기 후 이동
+      setTimeout(() => { location.href = dest; }, 170);
+    }, true /* capture */);
   },
 };
 
