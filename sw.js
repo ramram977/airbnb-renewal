@@ -1,4 +1,4 @@
-const CACHE = 'stay-v19';
+const CACHE = 'stay-v20';
 
 const ASSETS = [
   '/airbnb-renewal/',
@@ -46,12 +46,13 @@ self.addEventListener('install', e => {
   );
 });
 
-// 활성화: 이전 캐시 삭제
+// 활성화: 이전 캐시 삭제 후 모든 탭에 갱신 신호
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
+      // claim() 이후 열려 있는 모든 탭에 controllerchange 를 발생시켜 자동 새로고침
   );
 });
 

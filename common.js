@@ -154,8 +154,18 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── 7. PWA 서비스워커 등록 ────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/airbnb-renewal/sw.js')
-      .catch(() => {}); // 로컬 개발 환경에서는 무시
+    navigator.serviceWorker
+      // updateViaCache:'none' → sw.js 자체를 HTTP 캐시 없이 항상 네트워크에서 확인
+      .register('/airbnb-renewal/sw.js', { updateViaCache: 'none' })
+      .then(reg => {
+        reg.update(); // 페이지 로드마다 업데이트 체크 강제 실행
+      })
+      .catch(() => {});
+
+    // 새 SW 가 activate 되면 페이지 새로고침 → 최신 캐시 즉시 적용
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      location.reload();
+    });
   });
 }
 
