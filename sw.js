@@ -1,4 +1,4 @@
-const CACHE = 'stay-v20';
+const CACHE = 'stay-v21';
 
 const ASSETS = [
   '/airbnb-renewal/',
@@ -11,6 +11,7 @@ const ASSETS = [
   '/airbnb-renewal/chat.html',
   '/airbnb-renewal/profile.html',
   '/airbnb-renewal/common.js',
+  '/airbnb-renewal/trip.html',
   '/airbnb-renewal/manifest.json',
   '/airbnb-renewal/data/rooms.json',
   '/airbnb-renewal/data/amenities.json',
