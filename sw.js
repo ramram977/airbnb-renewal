@@ -1,4 +1,4 @@
-const CACHE = 'stay-v21';
+const CACHE = 'stay-v22';
 
 const ASSETS = [
   '/airbnb-renewal/',

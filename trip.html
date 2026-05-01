@@ -10,10 +10,18 @@
   <meta name="apple-mobile-web-app-title" content="스테이">
   <link rel="apple-touch-icon" href="/airbnb-renewal/icons/icon-192.png">
   <title>여행 동선 — 스테이</title>
+
   <script src="common.js"></script>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Kakao Map SDK -->
   <script type="text/javascript"
     src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=08be264251f2f529df69c1e921140378&libraries=services&autoload=false">
   </script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -29,13 +37,15 @@
       --surface:    #FFFFFF;
     }
 
-    html, body { height: 100%; overflow: hidden; font-family: -apple-system, 'Pretendard', 'SF Pro Display', sans-serif; }
+    html, body {
+      height: 100%; overflow: hidden;
+      font-family: -apple-system, 'Pretendard', 'SF Pro Display', sans-serif;
+    }
 
     .app {
       position: relative;
       width: 390px; height: 100dvh;
-      margin: 0 auto;
-      overflow: hidden;
+      margin: 0 auto; overflow: hidden;
       background: #1a1a1a;
     }
 
@@ -46,27 +56,47 @@
     .trip-header {
       position: absolute;
       top: 0; left: 0; right: 0; z-index: 200;
-      padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px;
+      padding: calc(env(safe-area-inset-top, 0px) + 10px) 12px 10px;
       background: rgba(255,255,255,0.94);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
       border-bottom: 1px solid rgba(240,232,216,.8);
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 8px;
     }
+
     .hd-back {
       width: 34px; height: 34px; border-radius: 50%;
       border: none; background: var(--primary-bg);
       display: flex; align-items: center; justify-content: center;
       font-size: 15px; cursor: pointer; flex-shrink: 0; color: var(--dark);
     }
-    .hd-info { flex: 1; min-width: 0; }
-    .hd-title { font-size: 15px; font-weight: 700; color: var(--dark); }
-    .hd-sub   { font-size: 11px; color: var(--mid); margin-top: 1px; }
+
+    /* 여행 이름 — 탭하면 편집 가능한 인풋 */
+    .trip-name-wrap { flex: 1; min-width: 0; }
+    .trip-name-input {
+      width: 100%;
+      font-size: 15px; font-weight: 700; color: var(--dark);
+      border: none; outline: none; background: transparent;
+      border-radius: 6px; padding: 2px 4px; margin: 0 -4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .trip-name-input:focus {
+      background: var(--primary-bg);
+      outline: 1.5px solid var(--primary);
+    }
+    .hd-sub { font-size: 11px; color: var(--mid); padding-left: 4px; }
+
+    .hd-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: none; background: var(--primary-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; cursor: pointer; flex-shrink: 0;
+    }
     .hd-save {
-      width: 34px; height: 34px; border-radius: 50%;
+      width: 32px; height: 32px; border-radius: 50%;
       border: none; background: var(--primary); color: #fff;
       display: flex; align-items: center; justify-content: center;
-      font-size: 15px; cursor: pointer; flex-shrink: 0;
+      font-size: 14px; cursor: pointer; flex-shrink: 0;
       box-shadow: 0 2px 8px rgba(232,160,32,.40);
     }
 
@@ -74,10 +104,9 @@
     .map-fabs {
       position: absolute;
       right: 14px;
-      bottom: calc(var(--panel-h, 300px) + env(safe-area-inset-bottom, 0px) + 18px);
+      bottom: calc(300px + env(safe-area-inset-bottom, 0px) + 18px);
       z-index: 150;
       display: flex; flex-direction: column; gap: 10px;
-      transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .fab {
       width: 46px; height: 46px; border-radius: 50%;
@@ -101,20 +130,15 @@
       display: flex; align-items: center; justify-content: center;
       border: 2.5px solid #fff;
       box-shadow: 0 2px 10px rgba(232,160,32,.55);
-      transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+      transition: background .15s, transform .15s;
     }
     .pin-tail {
       width: 0; height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
+      border-left: 5px solid transparent; border-right: 5px solid transparent;
       border-top: 8px solid var(--primary);
-      transition: border-top-color 0.15s;
+      transition: border-top-color .15s;
     }
-    .trip-pin.sel .pin-num {
-      background: var(--red);
-      box-shadow: 0 2px 10px rgba(255,56,92,.55);
-      transform: scale(1.18);
-    }
+    .trip-pin.sel .pin-num  { background: var(--red); transform: scale(1.18); box-shadow: 0 2px 10px rgba(255,56,92,.55); }
     .trip-pin.sel .pin-tail { border-top-color: var(--red); }
 
     /* ── BOTTOM PANEL ── */
@@ -126,11 +150,9 @@
       box-shadow: 0 -4px 24px rgba(0,0,0,.13);
       display: flex; flex-direction: column;
       height: calc(300px + env(safe-area-inset-bottom, 0px));
-      transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: height .3s cubic-bezier(.4,0,.2,1);
     }
-    .panel.collapsed {
-      height: calc(66px + env(safe-area-inset-bottom, 0px));
-    }
+    .panel.collapsed { height: calc(66px + env(safe-area-inset-bottom, 0px)); }
 
     .panel-handle-row {
       flex-shrink: 0; padding: 10px 0 0;
@@ -146,9 +168,7 @@
     .ptab {
       flex: 1; text-align: center; padding: 7px 0;
       font-size: 13px; font-weight: 600; color: var(--mid);
-      cursor: pointer;
-      border-bottom: 2.5px solid transparent;
-      margin-bottom: -1px;
+      cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1px;
     }
     .ptab.on { color: var(--primary); border-bottom-color: var(--primary); }
 
@@ -168,8 +188,7 @@
     /* ── WAYPOINT LIST ── */
     .wp-item {
       display: flex; align-items: center; gap: 10px;
-      padding: 11px 16px;
-      border-bottom: 1px solid var(--border);
+      padding: 11px 16px; border-bottom: 1px solid var(--border);
     }
     .wp-badge {
       width: 27px; height: 27px; border-radius: 50%;
@@ -195,10 +214,7 @@
     .ibt.del  { color: var(--red); }
 
     /* ── NEARBY ── */
-    .nb-ref {
-      padding: 10px 16px 4px;
-      font-size: 12px; font-weight: 700; color: var(--primary);
-    }
+    .nb-ref  { padding: 10px 16px 4px; font-size: 12px; font-weight: 700; color: var(--primary); }
     .nb-cats {
       display: flex; gap: 7px; padding: 4px 16px 10px;
       overflow-x: auto; scrollbar-width: none;
@@ -210,11 +226,9 @@
       font-size: 12px; font-weight: 600; color: var(--mid); cursor: pointer;
     }
     .nb-cat.on { background: var(--primary); border-color: var(--primary); color: #fff; }
-
     .nb-item {
       display: flex; align-items: center; gap: 11px;
-      padding: 10px 16px; border-bottom: 1px solid var(--border);
-      cursor: pointer;
+      padding: 10px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
     }
     .nb-item:active { background: var(--primary-bg); }
     .nb-ico {
@@ -237,27 +251,19 @@
       background: rgba(0,0,0,.35);
       display: flex; flex-direction: column; justify-content: flex-end;
       opacity: 0; pointer-events: none;
-      transition: opacity 0.25s ease;
+      transition: opacity .25s ease;
     }
     .srch-modal.open { opacity: 1; pointer-events: auto; }
     .srch-sheet {
-      background: var(--surface);
-      border-radius: 20px 20px 0 0;
-      height: 76dvh;
-      display: flex; flex-direction: column;
+      background: var(--surface); border-radius: 20px 20px 0 0;
+      height: 76dvh; display: flex; flex-direction: column;
       transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     .srch-modal.open .srch-sheet { transform: translateY(0); }
-
-    .srch-head {
-      flex-shrink: 0;
-      padding: 14px 16px 10px;
-      border-bottom: 1px solid var(--border);
-    }
-    .srch-title { font-size: 15px; font-weight: 700; color: var(--dark);
-      text-align: center; margin-bottom: 10px; }
+    .srch-head { flex-shrink: 0; padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+    .srch-title { font-size: 15px; font-weight: 700; color: var(--dark); text-align: center; margin-bottom: 10px; }
     .srch-row { display: flex; gap: 8px; }
     .srch-input {
       flex: 1; padding: 10px 16px; border-radius: 50px;
@@ -270,20 +276,14 @@
       border: none; background: var(--light);
       font-size: 13px; font-weight: 600; color: var(--dark); cursor: pointer;
     }
-
     .srch-results { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-
     .sr-item {
       display: flex; align-items: center; gap: 11px;
       padding: 12px 16px; border-bottom: 1px solid var(--border);
     }
     .sr-item:active { background: var(--primary-bg); }
-    .sr-ico {
-      width: 38px; height: 38px; border-radius: 11px;
-      background: var(--primary-bg);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; flex-shrink: 0;
-    }
+    .sr-ico  { width: 38px; height: 38px; border-radius: 11px; background: var(--primary-bg);
+      display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
     .sr-info { flex: 1; min-width: 0; }
     .sr-name { font-size: 13.5px; font-weight: 700; color: var(--dark); }
     .sr-addr { font-size: 11px; color: var(--mid); margin-top: 2px;
@@ -292,23 +292,89 @@
     .sr-add  {
       padding: 6px 12px; border-radius: 20px;
       border: 1.5px solid var(--primary); background: var(--primary-bg);
-      color: var(--primary); font-size: 12px; font-weight: 600;
-      cursor: pointer; flex-shrink: 0;
+      color: var(--primary); font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;
     }
     .srch-hint { text-align: center; padding: 36px 20px; }
     .srch-hint-ico { font-size: 38px; margin-bottom: 10px; }
     .srch-hint-txt { font-size: 13px; color: var(--mid); }
 
+    /* ── 여행 목록 MODAL ── */
+    .trips-modal {
+      position: absolute; inset: 0; z-index: 500;
+      background: rgba(0,0,0,.4);
+      display: flex; flex-direction: column; justify-content: flex-end;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s ease;
+    }
+    .trips-modal.open { opacity: 1; pointer-events: auto; }
+    .trips-sheet {
+      background: var(--surface); border-radius: 20px 20px 0 0;
+      max-height: 70dvh; display: flex; flex-direction: column;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    }
+    .trips-modal.open .trips-sheet { transform: translateY(0); }
+
+    .ts-handle-row { padding: 10px 0 0; display: flex; justify-content: center; }
+    .ts-handle { width: 36px; height: 4px; background: var(--light); border-radius: 2px; }
+
+    .ts-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 18px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ts-title { font-size: 16px; font-weight: 700; color: var(--dark); }
+    .ts-new {
+      padding: 7px 14px; border-radius: 20px;
+      border: none; background: var(--primary); color: #fff;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+
+    .trips-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    .trip-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 18px; border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .trip-item:active { background: var(--primary-bg); }
+    .trip-item.current { background: var(--primary-bg); }
+    .trip-item.current .ti-name { color: var(--primary); }
+
+    .ti-ico {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: var(--primary-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .trip-item.current .ti-ico { background: var(--primary); }
+
+    .ti-info { flex: 1; min-width: 0; }
+    .ti-name { font-size: 14px; font-weight: 700; color: var(--dark);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ti-meta { font-size: 11.5px; color: var(--mid); margin-top: 3px; }
+
+    .ti-del {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: none; background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; cursor: pointer; color: var(--mid); flex-shrink: 0;
+    }
+    .ti-del:active { color: var(--red); background: #FFF0F3; }
+
+    .trips-loading { text-align: center; padding: 30px; font-size: 13px; color: var(--mid); }
+
     /* ── TOAST ── */
     .toast {
       position: absolute; z-index: 600;
-      bottom: calc(var(--panel-h, 300px) + env(safe-area-inset-bottom, 0px) + 24px);
+      bottom: calc(320px + env(safe-area-inset-bottom, 0px));
       left: 50%; transform: translateX(-50%) translateY(12px);
       background: rgba(26,26,26,.88); color: #fff;
       padding: 9px 18px; border-radius: 50px;
       font-size: 13px; font-weight: 600; white-space: nowrap;
       opacity: 0; pointer-events: none;
-      transition: opacity 0.2s, transform 0.2s;
+      transition: opacity .2s, transform .2s;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -318,14 +384,17 @@
       --white: #1C1C1E; --surface: #1C1C1E;
       --border: #38383A; --primary-bg: #2A2010;
     }
-    [data-theme="dark"] .trip-header { background: rgba(20,20,20,.94); }
+    [data-theme="dark"] .trip-header  { background: rgba(20,20,20,.94); }
     [data-theme="dark"] .panel        { background: #1C1C1E; }
     [data-theme="dark"] .srch-sheet   { background: #1C1C1E; }
+    [data-theme="dark"] .trips-sheet  { background: #1C1C1E; }
     [data-theme="dark"] .srch-input   { background: #2A2A2C; color: #E5E5E7; border-color: #38383A; }
     [data-theme="dark"] .srch-cancel  { background: #38383A; color: #E5E5E7; }
     [data-theme="dark"] .nb-cat       { background: #1C1C1E; border-color: #38383A; color: #8E8E93; }
     [data-theme="dark"] .fab          { background: #1C1C1E; }
     [data-theme="dark"] .ibt          { background: #2A2A2C; border-color: #38383A; color: #E5E5E7; }
+    [data-theme="dark"] .trip-name-input { color: #E5E5E7; }
+    [data-theme="dark"] .trip-name-input:focus { background: #2A2010; outline-color: #F0B030; }
   </style>
 </head>
 <body>
@@ -336,17 +405,21 @@
   <!-- HEADER -->
   <header class="trip-header">
     <button class="hd-back" onclick="history.back()">←</button>
-    <div class="hd-info">
-      <div class="hd-title">여행 동선</div>
-      <div class="hd-sub" id="hdSub">지도를 탭하거나 + 로 장소를 추가하세요</div>
+    <div class="trip-name-wrap">
+      <input class="trip-name-input" id="tripNameInput"
+        value="새 여행" maxlength="30"
+        onchange="onNameChange()" onblur="onNameChange()" />
+      <div class="hd-sub" id="hdSub">장소를 추가해 동선을 만들어보세요</div>
     </div>
-    <button class="hd-save" onclick="saveTrip()" title="저장">💾</button>
+    <button class="hd-btn" onclick="shareTrip()" title="링크 공유">🔗</button>
+    <button class="hd-btn" onclick="openTripsList()" title="내 여행 목록">📋</button>
+    <button class="hd-save" onclick="saveTripNow()" title="저장">💾</button>
   </header>
 
   <!-- FABs -->
-  <div class="map-fabs" id="mapFabs">
-    <button class="fab fab-add" onclick="openSearch()" title="장소 추가">+</button>
-    <button class="fab" onclick="addCurrentLocation()" title="현위치 추가">📍</button>
+  <div class="map-fabs">
+    <button class="fab fab-add" onclick="openSearch()">+</button>
+    <button class="fab" onclick="addCurrentLocation()">📍</button>
   </div>
 
   <!-- BOTTOM PANEL -->
@@ -365,7 +438,7 @@
   </div>
 
   <!-- SEARCH MODAL -->
-  <div class="srch-modal" id="srchModal" onclick="onModalBg(event)">
+  <div class="srch-modal" id="srchModal" onclick="onSrchBg(event)">
     <div class="srch-sheet">
       <div class="srch-head">
         <div class="srch-title">장소 추가</div>
@@ -373,7 +446,7 @@
           <input class="srch-input" id="srchInput" type="search"
             placeholder="장소·카페·관광명소 검색"
             autocomplete="off" enterkeyhint="search"
-            oninput="onInput()" />
+            oninput="onSrchInput()" />
           <button class="srch-cancel" onclick="closeSearch()">취소</button>
         </div>
       </div>
@@ -386,65 +459,247 @@
     </div>
   </div>
 
+  <!-- TRIPS LIST MODAL -->
+  <div class="trips-modal" id="tripsModal" onclick="onTripsModalBg(event)">
+    <div class="trips-sheet">
+      <div class="ts-handle-row"><div class="ts-handle"></div></div>
+      <div class="ts-header">
+        <span class="ts-title">내 여행 목록</span>
+        <button class="ts-new" onclick="startNewTrip()">+ 새 여행</button>
+      </div>
+      <div class="trips-list" id="tripsList"></div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
-</div><!-- .app -->
+</div>
 
 <script>
-/* ── STATE ─────────────────────────────────── */
-let map         = null;
-let waypoints   = [];    // [{name, address, lat, lng, ov, el}]
-let polyline    = null;
-let selIdx      = -1;
-let curTab      = 'places';
-let nbCat       = 'FD6';
-let _srchCache  = [];
-let _timer      = null;
-let panelOpen   = false;
+/* ═══════════════════════════════════════════════════════
+   🔥 FIREBASE 설정
+   아래 값을 Firebase 콘솔에서 복사한 값으로 교체하세요.
+   콘솔 → 프로젝트 설정 → 내 앱 → firebaseConfig
+═══════════════════════════════════════════════════════ */
+const FB_CONFIG = {
+  apiKey:            "여기에_붙여넣기",
+  authDomain:        "여기에_붙여넣기",
+  projectId:         "여기에_붙여넣기",
+  storageBucket:     "여기에_붙여넣기",
+  messagingSenderId: "여기에_붙여넣기",
+  appId:             "여기에_붙여넣기"
+};
+/* ═══════════════════════════════════════════════════════ */
 
-const PANEL_FULL = 300;
-const PANEL_MINI = 66;
+/* ── FIREBASE INIT ───────────────────────────────────── */
+let db = null;
+
+(function initFirebase() {
+  if (FB_CONFIG.apiKey === '여기에_붙여넣기') {
+    console.info('[Trip] Firebase 미설정 → localStorage 모드');
+    return;
+  }
+  try {
+    firebase.initializeApp(FB_CONFIG);
+    db = firebase.firestore();
+    // 오프라인 캐시 활성화 (PWA 오프라인 지원)
+    db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+  } catch (e) { console.error('Firebase 초기화 오류:', e); }
+})();
+
+/* ── DEVICE ID (로그인 없이 '내 여행' 구분용) ─────────── */
+const DEVICE_ID = (() => {
+  let id = localStorage.getItem('ab_device_id');
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+    localStorage.setItem('ab_device_id', id);
+  }
+  return id;
+})();
+
+/* ── STATE ───────────────────────────────────────────── */
+let map       = null;
+let waypoints = [];     // [{name, addr, lat, lng, ov, el}]
+let polyline  = null;
+let selIdx    = -1;
+let curTab    = 'places';
+let nbCat     = 'FD6';
+let _srchCache = [];
+let _srchTimer = null;
+let _saveTimer = null;
+let panelOpen  = false;
+let tripId     = null;  // Firestore 문서 ID
 
 const CAT = {
-  FD6: { label: '음식점', icon: '🍽️' },
-  CE7: { label: '카페',   icon: '☕' },
+  FD6: { label: '음식점',  icon: '🍽️' },
+  CE7: { label: '카페',    icon: '☕'  },
   AT4: { label: '관광명소', icon: '🏛️' },
 };
-
 const CAT_ICON = {
-  FD6:'🍽️', CE7:'☕', CE6:'☕', AT4:'🏛️', AD5:'🏨',
-  HP8:'🏥', PM9:'💊', SC4:'🏫', AC5:'🏫', PK6:'🅿️',
-  OL7:'⛽', SW8:'🚇', BK9:'🏦', CT1:'🏛️', AG2:'🏢',
+  FD6:'🍽️', CE7:'☕', AT4:'🏛️', AD5:'🏨',
+  HP8:'🏥', SW8:'🚇', BK9:'🏦', OL7:'⛽',
 };
 
-/* ── MAP INIT ──────────────────────────────── */
+/* ── KAKAO MAP INIT ──────────────────────────────────── */
 kakao.maps.load(() => {
   map = new kakao.maps.Map(document.getElementById('kakao-map'), {
-    center: new kakao.maps.LatLng(37.5665, 126.9780),
-    level: 8,
+    center: new kakao.maps.LatLng(37.5665, 126.9780), level: 8,
   });
-
-  /* 지도 클릭 → 해당 위치 추가 */
   kakao.maps.event.addListener(map, 'click', e => {
-    const lat = e.latLng.getLat();
-    const lng = e.latLng.getLng();
-    revGeo(lat, lng, (name, addr) => addWp(name, addr, lat, lng));
+    revGeo(e.latLng.getLat(), e.latLng.getLng(),
+      (name, addr) => addWp(name, addr, e.latLng.getLat(), e.latLng.getLng()));
   });
-
-  loadTrip();
+  initLoad();
 });
 
-/* ── ADD / REMOVE / MOVE ───────────────────── */
+/* ── 초기 로드: URL ?id= 우선, 없으면 마지막 저장 ─────── */
+async function initLoad() {
+  const urlId = new URLSearchParams(location.search).get('id');
+  if (urlId) {
+    await loadTripById(urlId);
+  } else {
+    const lastId = localStorage.getItem('ab_last_trip_id');
+    if (lastId && db) {
+      await loadTripById(lastId);
+    } else {
+      localLoad(); // localStorage 백업 시도
+    }
+  }
+  renderList();
+  updateSub();
+}
+
+/* ══════════════════════════════════════════════════════
+   FIRESTORE 저장 / 불러오기
+══════════════════════════════════════════════════════ */
+function getTripName() {
+  return document.getElementById('tripNameInput').value.trim() || '새 여행';
+}
+
+function scheduleSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(dbSave, 1200);
+}
+
+async function saveTripNow() {
+  clearTimeout(_saveTimer);
+  await dbSave();
+  toast('💾 저장됐어요');
+}
+
+async function dbSave() {
+  const data = {
+    name:      getTripName(),
+    deviceId:  DEVICE_ID,
+    waypoints: waypoints.map(({ name, addr, lat, lng }) => ({ name, addr, lat, lng })),
+    updatedAt: db
+      ? firebase.firestore.FieldValue.serverTimestamp()
+      : new Date().toISOString(),
+  };
+
+  // localStorage 백업은 항상 저장
+  localSave(data);
+
+  if (!db) return;
+
+  try {
+    if (tripId) {
+      await db.collection('trips').doc(tripId).update(data);
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      const ref = await db.collection('trips').add(data);
+      tripId = ref.id;
+      localStorage.setItem('ab_last_trip_id', tripId);
+      // URL에 trip ID 추가 (공유 가능)
+      history.replaceState(null, '', `?id=${tripId}`);
+    }
+  } catch (e) {
+    console.error('Firestore 저장 실패:', e);
+  }
+}
+
+async function loadTripById(id) {
+  if (!db) return;
+  try {
+    const doc = await db.collection('trips').doc(id).get();
+    if (!doc.exists) { toast('여행을 찾을 수 없어요'); return; }
+    const data = doc.data();
+    tripId = id;
+    localStorage.setItem('ab_last_trip_id', id);
+    history.replaceState(null, '', `?id=${id}`);
+    document.getElementById('tripNameInput').value = data.name || '새 여행';
+    (data.waypoints || []).forEach(w => addWp(w.name, w.addr, w.lat, w.lng, true));
+    fitBounds();
+  } catch (e) {
+    console.error('Firestore 불러오기 실패:', e);
+    localLoad();
+  }
+}
+
+async function loadMyTrips() {
+  if (!db) return localLoadMyTrips();
+  try {
+    const snap = await db.collection('trips')
+      .where('deviceId', '==', DEVICE_ID).get();
+    const list = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => {
+        const ta = a.updatedAt?.toDate?.().getTime() || 0;
+        const tb = b.updatedAt?.toDate?.().getTime() || 0;
+        return tb - ta;
+      });
+    return list;
+  } catch (e) {
+    console.error('목록 불러오기 실패:', e);
+    return localLoadMyTrips();
+  }
+}
+
+async function deleteTripById(id) {
+  if (db) {
+    try { await db.collection('trips').doc(id).delete(); } catch (e) {}
+  }
+  if (id === localStorage.getItem('ab_last_trip_id')) {
+    localStorage.removeItem('ab_last_trip_id');
+  }
+}
+
+/* ── LOCALSTORAGE 백업 ───────────────────────────────── */
+function localSave(data) {
+  localStorage.setItem('ab_trip_backup', JSON.stringify(data));
+}
+function localLoad() {
+  try {
+    const raw = localStorage.getItem('ab_trip_backup');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    document.getElementById('tripNameInput').value = data.name || '새 여행';
+    (data.waypoints || []).forEach(w => addWp(w.name, w.addr || w.address, w.lat, w.lng, true));
+    fitBounds();
+  } catch (_) {}
+}
+function localLoadMyTrips() {
+  try {
+    const raw = localStorage.getItem('ab_trip_backup');
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return [{ id: 'local', name: data.name || '저장된 여행', waypoints: data.waypoints || [], updatedAt: null }];
+  } catch (_) { return []; }
+}
+
+/* ══════════════════════════════════════════════════════
+   WAYPOINT CRUD
+══════════════════════════════════════════════════════ */
 function addWp(name, addr, lat, lng, silent = false) {
-  waypoints.push({ name, addr, lat, lng, ov: null, el: null });
+  waypoints.push({ name, addr: addr || '', lat, lng, ov: null, el: null });
   const i = waypoints.length - 1;
   createPin(i);
   drawLine();
   renderList();
   updateSub();
   if (!silent) {
-    persist();
+    scheduleSave();
     toast(`📍 ${name} 추가됨`);
     if (!panelOpen) togglePanel();
   }
@@ -455,12 +710,10 @@ function removeWp(i) {
   waypoints.splice(i, 1);
   waypoints.forEach((_, j) => clearPin(j));
   waypoints.forEach((_, j) => createPin(j));
-  drawLine();
-  renderList();
-  updateSub();
+  drawLine(); renderList(); updateSub();
   if (selIdx === i) { selIdx = -1; renderNearbyContent(); }
   else if (selIdx > i) selIdx--;
-  persist();
+  scheduleSave();
 }
 
 function moveWp(i, dir) {
@@ -469,19 +722,16 @@ function moveWp(i, dir) {
   [waypoints[i], waypoints[j]] = [waypoints[j], waypoints[i]];
   waypoints.forEach((_, k) => clearPin(k));
   waypoints.forEach((_, k) => createPin(k));
-  drawLine();
-  renderList();
-  persist();
+  drawLine(); renderList(); scheduleSave();
 }
 
-/* ── PINS ──────────────────────────────────── */
+/* ── PINS ────────────────────────────────────────────── */
 function createPin(i) {
   const w = waypoints[i];
   const el = document.createElement('div');
   el.className = 'trip-pin' + (i === selIdx ? ' sel' : '');
   el.innerHTML = `<div class="pin-num">${i + 1}</div><div class="pin-tail"></div>`;
   el.addEventListener('click', () => selectWp(i));
-
   const ov = new kakao.maps.CustomOverlay({
     position: new kakao.maps.LatLng(w.lat, w.lng),
     content: el, yAnchor: 1.05, zIndex: 5,
@@ -489,40 +739,35 @@ function createPin(i) {
   ov.setMap(map);
   w.ov = ov; w.el = el;
 }
-
 function clearPin(i) {
-  if (waypoints[i] && waypoints[i].ov) {
-    waypoints[i].ov.setMap(null);
-    waypoints[i].ov = null;
-    waypoints[i].el = null;
-  }
+  if (waypoints[i]?.ov) { waypoints[i].ov.setMap(null); waypoints[i].ov = null; waypoints[i].el = null; }
 }
-
-/* ── POLYLINE ──────────────────────────────── */
 function drawLine() {
   if (polyline) { polyline.setMap(null); polyline = null; }
   if (waypoints.length < 2) return;
   polyline = new kakao.maps.Polyline({
-    map,
-    path: waypoints.map(w => new kakao.maps.LatLng(w.lat, w.lng)),
-    strokeWeight: 3,
-    strokeColor: '#E8A020',
-    strokeOpacity: 0.85,
-    strokeStyle: 'shortdash',
+    map, path: waypoints.map(w => new kakao.maps.LatLng(w.lat, w.lng)),
+    strokeWeight: 3, strokeColor: '#E8A020', strokeOpacity: .85, strokeStyle: 'shortdash',
   });
 }
+function fitBounds() {
+  if (!map || waypoints.length < 2) {
+    if (waypoints.length === 1) map?.setCenter(new kakao.maps.LatLng(waypoints[0].lat, waypoints[0].lng));
+    return;
+  }
+  const b = new kakao.maps.LatLngBounds();
+  waypoints.forEach(w => b.extend(new kakao.maps.LatLng(w.lat, w.lng)));
+  map.setBounds(b);
+}
 
-/* ── SELECT WAYPOINT ───────────────────────── */
+/* ── SELECT / FOCUS ──────────────────────────────────── */
 function selectWp(i) {
   selIdx = i;
-  waypoints.forEach((w, j) => {
-    if (w.el) w.el.classList.toggle('sel', j === i);
-  });
+  waypoints.forEach((w, j) => w.el?.classList.toggle('sel', j === i));
   switchTab('nearby');
   if (!panelOpen) togglePanel();
   loadNearby(nbCat);
 }
-
 function focusWp(i) {
   const w = waypoints[i];
   if (!w || !map) return;
@@ -530,280 +775,301 @@ function focusWp(i) {
   map.setLevel(4);
 }
 
-/* ── NEARBY ────────────────────────────────── */
+/* ── NEARBY ──────────────────────────────────────────── */
 function loadNearby(cat) {
   nbCat = cat;
-  if (selIdx < 0 || selIdx >= waypoints.length) {
-    renderNearbyContent(); return;
-  }
+  if (selIdx < 0 || selIdx >= waypoints.length) { renderNearbyContent(); return; }
   const w = waypoints[selIdx];
-  const el = document.getElementById('tabNearby');
-  el.innerHTML = nearbyHeaderHTML() +
-    '<div class="nb-status">주변 장소를 불러오는 중…</div>';
-
-  const ps = new kakao.maps.services.Places();
-  ps.categorySearch(cat, (data, status) => {
-    if (status === kakao.maps.services.Status.OK) {
-      el.innerHTML = nearbyHeaderHTML() + renderNbItems(data);
-    } else {
-      el.innerHTML = nearbyHeaderHTML() +
-        '<div class="nb-status">검색 결과가 없습니다.</div>';
-    }
-  }, {
-    location: new kakao.maps.LatLng(w.lat, w.lng),
-    radius: 800,
-    size: 8,
-    sort: kakao.maps.services.SortBy.DISTANCE,
-  });
+  document.getElementById('tabNearby').innerHTML =
+    nearbyHdr() + '<div class="nb-status">주변 장소를 불러오는 중…</div>';
+  new kakao.maps.services.Places().categorySearch(cat, (data, status) => {
+    const el = document.getElementById('tabNearby');
+    if (!el) return;
+    el.innerHTML = status === kakao.maps.services.Status.OK
+      ? nearbyHdr() + renderNbItems(data)
+      : nearbyHdr() + '<div class="nb-status">검색 결과가 없습니다.</div>';
+  }, { location: new kakao.maps.LatLng(w.lat, w.lng), radius: 800, size: 8,
+       sort: kakao.maps.services.SortBy.DISTANCE });
 }
-
-function nearbyHeaderHTML() {
+function nearbyHdr() {
   if (selIdx < 0) return '';
-  const name = waypoints[selIdx].name;
-  const tabs = Object.entries(CAT).map(([code, info]) =>
-    `<div class="nb-cat${nbCat === code ? ' on' : ''}" onclick="loadNearby('${code}')">${info.icon} ${info.label}</div>`
+  const tabs = Object.entries(CAT).map(([c, i]) =>
+    `<div class="nb-cat${nbCat===c?' on':''}" onclick="loadNearby('${c}')">${i.icon} ${i.label}</div>`
   ).join('');
-  return `<div class="nb-ref">📍 ${name} 주변</div><div class="nb-cats">${tabs}</div>`;
+  return `<div class="nb-ref">📍 ${waypoints[selIdx].name} 주변</div>
+          <div class="nb-cats">${tabs}</div>`;
 }
-
 function renderNbItems(data) {
-  if (!data.length)
-    return '<div class="nb-status">주변에 검색 결과가 없습니다.</div>';
-  return data.map((d, i) => {
-    const dist = d.distance
-      ? (parseInt(d.distance) >= 1000
-        ? `${(parseInt(d.distance)/1000).toFixed(1)}km`
-        : `${d.distance}m`)
-      : '';
-    const sub = (d.category_name || '').split('>').pop().trim();
+  if (!data.length) return '<div class="nb-status">주변에 검색 결과가 없습니다.</div>';
+  return data.map(d => {
+    const dist = d.distance ? (parseInt(d.distance) >= 1000
+      ? `${(parseInt(d.distance)/1000).toFixed(1)}km` : `${d.distance}m`) : '';
+    const sub  = (d.category_name || '').split('>').pop().trim();
     const addr = d.road_address_name || d.address_name || '';
     return `<div class="nb-item" onclick="window.open('${d.place_url}','_blank')">
       <div class="nb-ico">${CAT[nbCat].icon}</div>
       <div class="nb-info">
         <div class="nb-name">${d.place_name}</div>
-        <div class="nb-sub">${sub}${addr ? ' · ' + addr : ''}</div>
+        <div class="nb-sub">${sub}${addr?' · '+addr:''}</div>
       </div>
-      ${dist ? `<div class="nb-dist">${dist}</div>` : ''}
+      ${dist?`<div class="nb-dist">${dist}</div>`:''}
     </div>`;
   }).join('');
 }
-
 function renderNearbyContent() {
   const el = document.getElementById('tabNearby');
-  if (selIdx < 0) {
-    el.innerHTML = `<div class="empty-box">
-      <div class="empty-icon">✨</div>
-      <div class="empty-ttl">장소를 선택하세요</div>
-      <div class="empty-desc">내 장소 목록에서 ✨ 버튼을 누르거나<br>지도의 번호 마커를 탭하면<br>주변 맛집·카페·명소를 추천해드려요.</div>
-    </div>`;
-  }
+  if (selIdx < 0) el.innerHTML = `<div class="empty-box">
+    <div class="empty-icon">✨</div>
+    <div class="empty-ttl">장소를 선택하세요</div>
+    <div class="empty-desc">내 장소에서 ✨ 버튼을 누르거나<br>지도의 번호 마커를 탭하면<br>주변 맛집·카페·명소를 추천해드려요.</div>
+  </div>`;
 }
 
-/* ── RENDER WAYPOINT LIST ──────────────────── */
+/* ── RENDER WAYPOINT LIST ────────────────────────────── */
 function renderList() {
   const el = document.getElementById('tabPlaces');
   if (!waypoints.length) {
     el.innerHTML = `<div class="empty-box">
       <div class="empty-icon">🗺️</div>
       <div class="empty-ttl">아직 장소가 없어요</div>
-      <div class="empty-desc">+ 버튼으로 검색하거나<br>지도를 직접 탭해서 장소를 추가해보세요.</div>
-    </div>`;
-    return;
+      <div class="empty-desc">+ 버튼으로 검색하거나<br>지도를 탭해서 장소를 추가해보세요.</div>
+    </div>`; return;
   }
   el.innerHTML = waypoints.map((w, i) => `
     <div class="wp-item">
-      <div class="wp-badge" onclick="focusWp(${i})">${i + 1}</div>
+      <div class="wp-badge" onclick="focusWp(${i})">${i+1}</div>
       <div class="wp-txt" onclick="focusWp(${i})">
         <div class="wp-name">${w.name}</div>
         <div class="wp-addr">${w.addr}</div>
       </div>
       <div class="wp-acts">
-        <button class="ibt near" onclick="selectWp(${i})" title="주변 추천">✨</button>
-        ${i > 0
-          ? `<button class="ibt" onclick="moveWp(${i},-1)">↑</button>`
-          : '<div style="width:27px"></div>'}
-        ${i < waypoints.length - 1
-          ? `<button class="ibt" onclick="moveWp(${i},1)">↓</button>`
-          : '<div style="width:27px"></div>'}
+        <button class="ibt near" onclick="selectWp(${i})">✨</button>
+        ${i>0 ? `<button class="ibt" onclick="moveWp(${i},-1)">↑</button>` : '<div style="width:27px"></div>'}
+        ${i<waypoints.length-1 ? `<button class="ibt" onclick="moveWp(${i},1)">↓</button>` : '<div style="width:27px"></div>'}
         <button class="ibt del" onclick="removeWp(${i})">✕</button>
       </div>
     </div>`).join('');
 }
 
-/* ── PANEL ─────────────────────────────────── */
+/* ── PANEL ───────────────────────────────────────────── */
 function togglePanel() {
   panelOpen = !panelOpen;
-  const panel = document.getElementById('panel');
-  panel.classList.toggle('collapsed', !panelOpen);
-  const h = panelOpen ? PANEL_FULL : PANEL_MINI;
-  document.documentElement.style.setProperty('--panel-h', h + 'px');
+  document.getElementById('panel').classList.toggle('collapsed', !panelOpen);
 }
-
 function switchTab(tab) {
   curTab = tab;
   document.getElementById('ptabPlaces').classList.toggle('on', tab === 'places');
   document.getElementById('ptabNearby').classList.toggle('on', tab === 'nearby');
-  document.getElementById('tabPlaces').style.display  = tab === 'places' ? '' : 'none';
-  document.getElementById('tabNearby').style.display  = tab === 'nearby' ? '' : 'none';
+  document.getElementById('tabPlaces').style.display = tab === 'places' ? '' : 'none';
+  document.getElementById('tabNearby').style.display = tab === 'nearby' ? '' : 'none';
   if (tab === 'nearby') renderNearbyContent();
   if (!panelOpen) togglePanel();
 }
 
-/* ── REVERSE GEOCODE ───────────────────────── */
-function revGeo(lat, lng, cb) {
-  const gc = new kakao.maps.services.Geocoder();
-  gc.coord2Address(lng, lat, (result, status) => {   // Kakao: lng, lat 순서
-    if (status === kakao.maps.services.Status.OK && result[0]) {
-      const r   = result[0];
-      const ra  = r.road_address;
-      const a   = r.address;
-      const addr = ra ? ra.address_name : a.address_name;
-      const name = ra
-        ? (ra.building_name || ra.road_name)
-        : a.address_name.split(' ').slice(-2).join(' ');
-      cb(name || '선택한 위치', addr);
+/* ── HEADER HELPERS ──────────────────────────────────── */
+function updateSub() {
+  const n = waypoints.length;
+  document.getElementById('hdSub').textContent =
+    n === 0 ? '지도를 탭하거나 + 로 장소를 추가하세요' :
+    n === 1 ? '장소 1곳 등록됨' :
+    `장소 ${n}곳 · 동선 생성됨`;
+}
+function onNameChange() { scheduleSave(); }
+
+/* ── SHARE ───────────────────────────────────────────── */
+async function shareTrip() {
+  if (!tripId && db) {
+    await dbSave();
+  }
+  if (!tripId) { toast('먼저 저장해주세요'); return; }
+
+  const url = `${location.origin}/airbnb-renewal/trip.html?id=${tripId}`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: getTripName(), text: '여행 동선을 공유해요!', url });
     } else {
-      cb('선택한 위치', `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+      await navigator.clipboard.writeText(url);
+      toast('🔗 링크가 복사됐어요');
     }
+  } catch (_) {
+    await navigator.clipboard.writeText(url).catch(() => {});
+    toast('🔗 링크가 복사됐어요');
+  }
+}
+
+/* ── TRIPS LIST MODAL ────────────────────────────────── */
+async function openTripsList() {
+  document.getElementById('tripsModal').classList.add('open');
+  document.getElementById('tripsList').innerHTML =
+    '<div class="trips-loading">불러오는 중…</div>';
+  const list = await loadMyTrips();
+  renderTripsList(list);
+}
+
+function closeTripsList() {
+  document.getElementById('tripsModal').classList.remove('open');
+}
+
+function onTripsModalBg(e) {
+  if (e.target.id === 'tripsModal') closeTripsList();
+}
+
+function renderTripsList(list) {
+  const el = document.getElementById('tripsList');
+  if (!list.length) {
+    el.innerHTML = '<div class="trips-loading">저장된 여행이 없어요.</div>'; return;
+  }
+  el.innerHTML = list.map(t => {
+    const isCurrent = t.id === tripId;
+    const wpCount   = (t.waypoints || []).length;
+    const timeStr   = relTime(t.updatedAt);
+    return `<div class="trip-item${isCurrent?' current':''}" onclick="loadAndClose('${t.id}')">
+      <div class="ti-ico">${isCurrent ? '🗺️' : '📍'}</div>
+      <div class="ti-info">
+        <div class="ti-name">${t.name || '이름 없는 여행'}</div>
+        <div class="ti-meta">장소 ${wpCount}곳${timeStr ? ' · ' + timeStr : ''}</div>
+      </div>
+      <button class="ti-del" onclick="deleteTripItem(event,'${t.id}')">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+async function loadAndClose(id) {
+  closeTripsList();
+  if (id === tripId) return;
+  clearAll();
+  await loadTripById(id);
+  renderList(); updateSub();
+}
+
+async function deleteTripItem(e, id) {
+  e.stopPropagation();
+  if (!confirm('이 여행을 삭제할까요?')) return;
+  await deleteTripById(id);
+  if (id === tripId) { clearAll(); tripId = null; history.replaceState(null,'','?'); }
+  const list = await loadMyTrips();
+  renderTripsList(list);
+  toast('삭제됐어요');
+}
+
+function startNewTrip() {
+  closeTripsList();
+  clearAll();
+  tripId = null;
+  history.replaceState(null, '', location.pathname);
+  document.getElementById('tripNameInput').value = '새 여행';
+  renderList(); updateSub();
+  toast('새 여행을 시작해요!');
+}
+
+function clearAll() {
+  waypoints.forEach((_, i) => clearPin(i));
+  waypoints = [];
+  if (polyline) { polyline.setMap(null); polyline = null; }
+  selIdx = -1; panelOpen = false;
+  document.getElementById('panel').classList.add('collapsed');
+}
+
+/* ── RELATIVE TIME ───────────────────────────────────── */
+function relTime(ts) {
+  if (!ts) return '';
+  const date = ts.toDate ? ts.toDate() : new Date(ts);
+  const diff = (Date.now() - date.getTime()) / 1000;
+  if (diff <    60) return '방금 전';
+  if (diff <  3600) return `${Math.floor(diff/60)}분 전`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}시간 전`;
+  if (diff < 604800) return `${Math.floor(diff/86400)}일 전`;
+  return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+}
+
+/* ── REVERSE GEOCODE ─────────────────────────────────── */
+function revGeo(lat, lng, cb) {
+  new kakao.maps.services.Geocoder().coord2Address(lng, lat, (result, status) => {
+    if (status === kakao.maps.services.Status.OK && result[0]) {
+      const r = result[0], ra = r.road_address, a = r.address;
+      const addr = ra ? ra.address_name : a.address_name;
+      const name = ra ? (ra.building_name || ra.road_name) : a.address_name.split(' ').slice(-2).join(' ');
+      cb(name || '선택한 위치', addr);
+    } else { cb('선택한 위치', `${lat.toFixed(4)}, ${lng.toFixed(4)}`); }
   });
 }
 
-/* ── SEARCH MODAL ──────────────────────────── */
+/* ── SEARCH MODAL ────────────────────────────────────── */
 function openSearch() {
   document.getElementById('srchModal').classList.add('open');
   setTimeout(() => document.getElementById('srchInput').focus(), 320);
 }
-
 function closeSearch() {
   document.getElementById('srchModal').classList.remove('open');
   document.getElementById('srchInput').value = '';
   document.getElementById('srchResults').innerHTML =
-    `<div class="srch-hint"><div class="srch-hint-ico">🔍</div>
-     <div class="srch-hint-txt">장소 이름으로 검색해보세요</div></div>`;
+    '<div class="srch-hint"><div class="srch-hint-ico">🔍</div><div class="srch-hint-txt">장소 이름으로 검색해보세요</div></div>';
   _srchCache = [];
 }
-
-function onModalBg(e) {
-  if (e.target.id === 'srchModal') closeSearch();
-}
-
-function onInput() {
-  clearTimeout(_timer);
+function onSrchBg(e) { if (e.target.id === 'srchModal') closeSearch(); }
+function onSrchInput() {
+  clearTimeout(_srchTimer);
   const q = document.getElementById('srchInput').value.trim();
-  if (!q) { closeSearch(); openSearch(); return; }
+  if (!q) return;
   document.getElementById('srchResults').innerHTML =
     '<div class="srch-hint"><div class="srch-hint-txt">검색 중…</div></div>';
-  _timer = setTimeout(() => doSearch(q), 380);
+  _srchTimer = setTimeout(() => {
+    const ps = new kakao.maps.services.Places();
+    const opts = map ? { location: map.getCenter(), sort: kakao.maps.services.SortBy.DISTANCE } : {};
+    ps.keywordSearch(q, (data, status) => {
+      if (status === kakao.maps.services.Status.OK) {
+        _srchCache = data;
+        document.getElementById('srchResults').innerHTML =
+          data.slice(0, 12).map((d, i) => {
+            const ico  = CAT_ICON[d.category_group_code] || '📍';
+            const addr = d.road_address_name || d.address_name || '';
+            const cat  = d.category_group_name || (d.category_name||'').split('>')[0].trim();
+            return `<div class="sr-item">
+              <div class="sr-ico">${ico}</div>
+              <div class="sr-info">
+                <div class="sr-name">${d.place_name}</div>
+                <div class="sr-addr">${addr}</div>
+                ${cat?`<div class="sr-cat">${cat}</div>`:''}
+              </div>
+              <button class="sr-add" onclick="addSrch(${i})">추가</button>
+            </div>`;
+          }).join('');
+      } else {
+        document.getElementById('srchResults').innerHTML =
+          '<div class="srch-hint"><div class="srch-hint-ico">😅</div><div class="srch-hint-txt">검색 결과가 없습니다</div></div>';
+      }
+    }, opts);
+  }, 380);
 }
-
-function doSearch(q) {
-  const ps = new kakao.maps.services.Places();
-  const opts = map ? { location: map.getCenter(), sort: kakao.maps.services.SortBy.DISTANCE } : {};
-  ps.keywordSearch(q, (data, status) => {
-    if (status === kakao.maps.services.Status.OK) {
-      _srchCache = data;
-      renderSrchResults(data);
-    } else {
-      _srchCache = [];
-      document.getElementById('srchResults').innerHTML =
-        `<div class="srch-hint"><div class="srch-hint-ico">😅</div>
-         <div class="srch-hint-txt">검색 결과가 없습니다</div></div>`;
-    }
-  }, opts);
-}
-
-function renderSrchResults(data) {
-  document.getElementById('srchResults').innerHTML =
-    data.slice(0, 12).map((d, i) => {
-      const ico  = CAT_ICON[d.category_group_code] || '📍';
-      const addr = d.road_address_name || d.address_name || '';
-      const cat  = d.category_group_name
-        || (d.category_name ? d.category_name.split('>')[0].trim() : '');
-      return `<div class="sr-item">
-        <div class="sr-ico">${ico}</div>
-        <div class="sr-info">
-          <div class="sr-name">${d.place_name}</div>
-          <div class="sr-addr">${addr}</div>
-          ${cat ? `<div class="sr-cat">${cat}</div>` : ''}
-        </div>
-        <button class="sr-add" onclick="addSrch(${i})">추가</button>
-      </div>`;
-    }).join('');
-}
-
 function addSrch(i) {
-  const d = _srchCache[i];
-  if (!d) return;
-  const addr = d.road_address_name || d.address_name || '';
-  addWp(d.place_name, addr, parseFloat(d.y), parseFloat(d.x));
+  const d = _srchCache[i]; if (!d) return;
+  addWp(d.place_name, d.road_address_name || d.address_name || '',
+    parseFloat(d.y), parseFloat(d.x));
   if (map) map.panTo(new kakao.maps.LatLng(parseFloat(d.y), parseFloat(d.x)));
   closeSearch();
 }
 
-/* ── CURRENT LOCATION ──────────────────────── */
+/* ── CURRENT LOCATION ────────────────────────────────── */
 function addCurrentLocation() {
   if (!navigator.geolocation) { toast('위치 정보를 사용할 수 없습니다'); return; }
   toast('현재 위치를 가져오는 중…');
   navigator.geolocation.getCurrentPosition(
     pos => {
-      const lat = pos.coords.latitude, lng = pos.coords.longitude;
+      const { latitude: lat, longitude: lng } = pos.coords;
       revGeo(lat, lng, (name, addr) => {
         addWp('현재 위치', addr, lat, lng);
-        if (map) map.setCenter(new kakao.maps.LatLng(lat, lng));
+        map?.setCenter(new kakao.maps.LatLng(lat, lng));
       });
     },
     () => toast('위치 접근 권한이 필요합니다')
   );
 }
 
-/* ── HEADER SUB ────────────────────────────── */
-function updateSub() {
-  const el = document.getElementById('hdSub');
-  const n  = waypoints.length;
-  el.textContent = n === 0 ? '지도를 탭하거나 + 로 장소를 추가하세요'
-    : n === 1 ? '장소 1곳 등록됨'
-    : `장소 ${n}곳 · 동선이 생성됐어요`;
-}
-
-/* ── SAVE / LOAD ───────────────────────────── */
-function persist() {
-  localStorage.setItem('ab_trip_v1', JSON.stringify(
-    waypoints.map(w => ({ name: w.name, addr: w.addr, lat: w.lat, lng: w.lng }))
-  ));
-}
-
-function saveTrip() {
-  persist();
-  toast('💾 저장됐어요');
-}
-
-function loadTrip() {
-  try {
-    const raw = localStorage.getItem('ab_trip_v1');
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    if (!data.length) return;
-    data.forEach(w => addWp(w.name, w.addr || w.address || '', w.lat, w.lng, true));
-    updateSub();
-    renderList();
-    if (!panelOpen) togglePanel();
-    if (data.length > 1) {
-      const bounds = new kakao.maps.LatLngBounds();
-      data.forEach(w => bounds.extend(new kakao.maps.LatLng(w.lat, w.lng)));
-      map.setBounds(bounds);
-    } else if (data.length === 1) {
-      map.setCenter(new kakao.maps.LatLng(data[0].lat, data[0].lng));
-      map.setLevel(5);
-    }
-  } catch (_) {}
-}
-
-/* ── TOAST ─────────────────────────────────── */
+/* ── TOAST ───────────────────────────────────────────── */
 let _toastTimer = null;
 function toast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
+  el.textContent = msg; el.classList.add('show');
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
