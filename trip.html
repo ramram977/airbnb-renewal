@@ -100,11 +100,35 @@
       box-shadow: 0 2px 8px rgba(232,160,32,.40);
     }
 
+    /* ── BOTTOM NAV ── */
+    .bnav {
+      position: absolute;
+      bottom: 0; left: 0; right: 0; z-index: 300;
+      height: calc(56px + env(safe-area-inset-bottom, 0px));
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(240,232,216,.8);
+      display: flex; align-items: flex-start;
+      padding-top: 8px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .bn-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .bn-icon  { font-size: 22px; line-height: 1; }
+    .bn-label { font-size: 10px; color: var(--mid); }
+    .bn-item.active .bn-label { color: var(--primary); font-weight: 700; }
+    [data-theme="dark"] .bnav { background: rgba(20,20,20,.96); border-top-color: #2A2A2C; }
+    [data-theme="dark"] .bn-label { color: #888; }
+
     /* ── FABs ── */
     .map-fabs {
       position: absolute;
       right: 14px;
-      bottom: calc(300px + env(safe-area-inset-bottom, 0px) + 18px);
+      bottom: calc(300px + env(safe-area-inset-bottom, 0px) + 56px + 18px);
       z-index: 150;
       display: flex; flex-direction: column; gap: 10px;
     }
@@ -144,15 +168,15 @@
     /* ── BOTTOM PANEL ── */
     .panel {
       position: absolute;
-      bottom: 0; left: 0; right: 0; z-index: 200;
+      bottom: calc(56px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; z-index: 200;
       background: var(--surface);
       border-radius: 20px 20px 0 0;
       box-shadow: 0 -4px 24px rgba(0,0,0,.13);
       display: flex; flex-direction: column;
-      height: calc(300px + env(safe-area-inset-bottom, 0px));
+      height: 300px;
       transition: height .3s cubic-bezier(.4,0,.2,1);
     }
-    .panel.collapsed { height: calc(66px + env(safe-area-inset-bottom, 0px)); }
+    .panel.collapsed { height: 66px; }
 
     .panel-handle-row {
       flex-shrink: 0; padding: 10px 0 0;
@@ -175,7 +199,7 @@
     .panel-body {
       flex: 1; overflow-y: auto; overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+      padding-bottom: 12px;
     }
     .panel.collapsed .panel-body { overflow: hidden; opacity: 0; pointer-events: none; }
 
@@ -473,6 +497,30 @@
 
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav">
+    <div class="bn-item" onclick="location.href='index.html'">
+      <span class="bn-icon">🏠</span>
+      <span class="bn-label">홈</span>
+    </div>
+    <div class="bn-item" onclick="location.href='search.html'">
+      <span class="bn-icon">🔍</span>
+      <span class="bn-label">검색</span>
+    </div>
+    <div class="bn-item active">
+      <span class="bn-icon">✈️</span>
+      <span class="bn-label">여행</span>
+    </div>
+    <div class="bn-item" onclick="location.href='map.html'">
+      <span class="bn-icon">🗺️</span>
+      <span class="bn-label">지도</span>
+    </div>
+    <div class="bn-item" onclick="location.href='profile.html'">
+      <span class="bn-icon">👤</span>
+      <span class="bn-label">프로필</span>
+    </div>
+  </nav>
 
 </div>
 
