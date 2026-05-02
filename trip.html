@@ -931,7 +931,7 @@ async function shareTrip() {
   }
   if (!tripId) { toast('먼저 저장해주세요'); return; }
 
-  const url = `${location.origin}/airbnb-renewal/trip.html?id=${tripId}`;
+  const url = `${location.origin}${location.pathname}?id=${tripId}`;
   try {
     if (navigator.share) {
       await navigator.share({ title: getTripName(), text: '여행 동선을 공유해요!', url });
